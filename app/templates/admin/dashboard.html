@@ -1,0 +1,63 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Admin Dashboard | SmartFinance{% endblock %}
+{% block admin_title %}Intelligence Center{% endblock %}
+{% block admin_content %}
+<section class="dashboard-grid" id="adminMetrics"></section>
+
+<section class="content-grid two-col mb-4">
+    <article class="panel" style="animation: slideInUp 0.5s ease forwards;">
+        <div class="panel-head">
+            <h2><i class="bi bi-graph-up text-accent me-2"></i> User Growth</h2>
+            <span class="text-muted small">New registrations timeline</span>
+        </div>
+        <div class="p-3">
+            <canvas id="userGrowthChart" height="220"></canvas>
+        </div>
+    </article>
+    <article class="panel" style="animation: slideInUp 0.6s ease forwards;">
+        <div class="panel-head">
+            <h2><i class="bi bi-pie-chart text-accent me-2"></i> Activity Flow</h2>
+            <span class="text-muted small">Income vs Expense Tracking</span>
+        </div>
+        <div class="p-3">
+            <canvas id="activityFlowChart" height="220"></canvas>
+        </div>
+    </article>
+</section>
+
+<section class="content-grid two-col mb-4">
+    <article class="panel" style="animation: slideInUp 0.7s ease forwards;">
+        <div class="panel-head">
+            <h2><i class="bi bi-bar-chart-steps text-accent me-2"></i> Category Breakdown</h2>
+            <span class="text-muted small">Top spending areas</span>
+        </div>
+        <div class="p-3">
+            <canvas id="categoryBreakdownChart" height="220"></canvas>
+        </div>
+    </article>
+    <article class="panel" style="animation: slideInUp 0.8s ease forwards;">
+        <div class="panel-head">
+            <h2><i class="bi bi-shield-lock text-accent me-2"></i> System Controls & Alerts</h2>
+        </div>
+        <div class="p-3">
+            <div class="d-flex align-items-center justify-content-between p-3 rounded mb-4" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <h3 class="h6 mb-1 text-white">Maintenance Mode</h3>
+                    <p class="text-muted small mb-0">Suspend public access.</p>
+                </div>
+                <div class="form-check form-switch" style="font-size: 1.5rem;">
+                    <input class="form-check-input cursor-pointer" type="checkbox" role="switch" id="adminMaintenanceToggle">
+                </div>
+            </div>
+            
+            <h3 class="h6 mb-2 text-white d-flex justify-content-between">
+                <span>Security Anomalies</span>
+                <span class="badge bg-danger rounded-pill" id="adminAlertCount">0</span>
+            </h3>
+            <div class="alert-list-container rounded" id="adminAlertsList" style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05);">
+                <div class="text-muted small py-3 text-center">Scanning...</div>
+            </div>
+        </div>
+    </article>
+</section>
+{% endblock %}

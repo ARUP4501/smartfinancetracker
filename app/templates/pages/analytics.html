@@ -1,0 +1,277 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Analytics | SmartFinance{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block page_subtitle %}Deep dive into your financial story{% endblock %}
+
+{% block page_content %}
+<style>
+/* ── Analytics page specific styles ─────────────────────────── */
+.an-hero {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+}
+@media(max-width:900px){ .an-hero { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:480px){ .an-hero { grid-template-columns: 1fr 1fr; } }
+
+.an-stat {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    padding: 20px 20px 18px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    transition: transform .25s ease, box-shadow .25s ease;
+    cursor: default;
+}
+.an-stat:hover { transform: translateY(-4px); }
+.an-stat .stat-glow {
+    position: absolute; inset: 0; opacity: 0;
+    transition: opacity .4s ease;
+    pointer-events: none;
+    border-radius: inherit;
+}
+.an-stat:hover .stat-glow { opacity: 1; }
+.an-stat.s-violet:hover { box-shadow: 0 10px 32px #7c3cff35; }
+.an-stat.s-violet .stat-glow { background: radial-gradient(ellipse at 80% 20%, #7c3cff22, transparent 65%); }
+.an-stat.s-green:hover  { box-shadow: 0 10px 32px #00d18f35; }
+.an-stat.s-green  .stat-glow { background: radial-gradient(ellipse at 80% 20%, #00d18f22, transparent 65%); }
+.an-stat.s-pink:hover   { box-shadow: 0 10px 32px #ff5d7335; }
+.an-stat.s-pink   .stat-glow { background: radial-gradient(ellipse at 80% 20%, #ff5d7322, transparent 65%); }
+.an-stat.s-blue:hover   { box-shadow: 0 10px 32px #4cc9f035; }
+.an-stat.s-blue   .stat-glow { background: radial-gradient(ellipse at 80% 20%, #4cc9f022, transparent 65%); }
+
+.an-stat .stat-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; margin-bottom: 12px;
+}
+.s-violet .stat-icon { background: #7c3cff22; color: #a78bfa; }
+.s-green  .stat-icon { background: #00d18f22; color: #00d18f; }
+.s-pink   .stat-icon { background: #ff5d7322; color: #ff5d73; }
+.s-blue   .stat-icon { background: #4cc9f022; color: #4cc9f0; }
+
+.an-stat .stat-label { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
+.an-stat .stat-val   { font-size: 1.6rem; font-weight: 900; color: var(--text); line-height: 1; }
+.an-stat .stat-sub   { font-size: 0.76rem; color: var(--muted); margin-top: 5px; }
+
+/* ── Chart grid ─────────────────────────────────── */
+.an-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.an-grid.wide { grid-template-columns: 1fr; }
+.an-grid.thirds { grid-template-columns: 1fr 1fr 1fr; }
+@media(max-width:900px){ .an-grid, .an-grid.thirds { grid-template-columns: 1fr; } }
+
+.an-card {
+    border-radius: 18px;
+    padding: 22px 24px 20px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .5s ease, transform .5s ease;
+}
+.an-card.visible { opacity: 1; transform: translateY(0); }
+.an-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    border-radius: 18px 18px 0 0;
+    opacity: 0; transition: opacity .4s;
+}
+.an-card:hover::before { opacity: 1; }
+.an-card.ac-violet::before { background: linear-gradient(90deg, #7c3cff, #a78bfa); }
+.an-card.ac-green::before  { background: linear-gradient(90deg, #00d18f, #b8f36d); }
+.an-card.ac-pink::before   { background: linear-gradient(90deg, #ff5d73, #ffb84d); }
+.an-card.ac-blue::before   { background: linear-gradient(90deg, #4cc9f0, #7c3cff); }
+.an-card.ac-orange::before { background: linear-gradient(90deg, #ff9f43, #ff5d73); }
+.an-card.ac-cyan::before   { background: linear-gradient(90deg, #22d3ee, #4cc9f0); }
+
+.an-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+}
+.an-card-head h3 {
+    font-size: 0.95rem; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px; margin: 0;
+}
+.an-card-head h3 .card-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+}
+.ac-violet .card-icon { background: #7c3cff22; color: #a78bfa; }
+.ac-green  .card-icon { background: #00d18f22; color: #00d18f; }
+.ac-pink   .card-icon { background: #ff5d7322; color: #ff5d73; }
+.ac-blue   .card-icon { background: #4cc9f022; color: #4cc9f0; }
+.ac-orange .card-icon { background: #ff9f4322; color: #ff9f43; }
+.ac-cyan   .card-icon { background: #22d3ee22; color: #22d3ee; }
+
+.an-badge {
+    font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+}
+.an-badge.live { background: #00d18f22; color: #00d18f; }
+
+.chart-wrap { position: relative; width: 100%; }
+.chart-wrap canvas { border-radius: 8px; }
+
+/* ── Insight ticker ──────────────────────────────── */
+.an-insights {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px;
+}
+@media(max-width:900px){ .an-insights { grid-template-columns: 1fr; } }
+
+.an-insight-item {
+    border-radius: 14px; padding: 16px 18px;
+    border: 1px solid var(--line); background: var(--surface);
+    display: flex; align-items: flex-start; gap: 12px;
+    opacity: 0; transform: translateX(-16px);
+    transition: opacity .4s ease, transform .4s ease;
+}
+.an-insight-item.visible { opacity: 1; transform: none; }
+.an-insight-icon {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.an-insight-item strong { font-size: 0.88rem; display: block; margin-bottom: 2px; }
+.an-insight-item p { font-size: 0.78rem; color: var(--muted); margin: 0; line-height: 1.4; }
+
+/* ── Savings goal progress ───────────────────────── */
+.goal-progress-stack { display: flex; flex-direction: column; gap: 12px; }
+.goal-progress-row { display: flex; flex-direction: column; gap: 4px; }
+.goal-progress-row .gp-head { display: flex; justify-content: space-between; align-items: center; }
+.goal-progress-row .gp-name { font-size: 0.87rem; font-weight: 700; color: var(--text); }
+.goal-progress-row .gp-pct  { font-size: 0.82rem; font-weight: 700; }
+.gp-bar-track { height: 8px; border-radius: 4px; background: var(--surface-soft); overflow: hidden; }
+.gp-bar-fill  { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(.4,0,.2,1); width: 0%; }
+.gp-sub { font-size: 0.73rem; color: var(--muted); }
+
+/* ── Animated number counter ─────────────────────── */
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+.an-stat .stat-val { animation: countUp .6s ease both; }
+
+/* ── Tab switcher ────────────────────────────────── */
+.an-tabs {
+    display: flex; gap: 6px; background: var(--surface-soft);
+    border-radius: 10px; padding: 4px;
+}
+.an-tab {
+    flex: 1; text-align: center; padding: 5px 10px; font-size: 0.78rem;
+    font-weight: 600; border-radius: 7px; border: 0; background: transparent;
+    color: var(--muted); cursor: pointer; transition: background .2s, color .2s;
+}
+.an-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+</style>
+
+<!-- ══ Hero KPI strip ══════════════════════════════════════════ -->
+<div class="an-hero">
+    <div class="an-stat s-green reveal" style="--delay:0ms">
+        <div class="stat-glow"></div>
+        <div class="stat-icon"><i class="bi bi-arrow-up-circle-fill"></i></div>
+        <div class="stat-label">Total Income</div>
+        <div class="stat-val" id="anTotalIncome">₹0</div>
+        <div class="stat-sub" id="anIncomeMonths">last 6 months</div>
+    </div>
+    <div class="an-stat s-pink reveal" style="--delay:60ms">
+        <div class="stat-glow"></div>
+        <div class="stat-icon"><i class="bi bi-arrow-down-circle-fill"></i></div>
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-val" id="anTotalSpent">₹0</div>
+        <div class="stat-sub">last 6 months</div>
+    </div>
+    <div class="an-stat s-blue reveal" style="--delay:120ms">
+        <div class="stat-glow"></div>
+        <div class="stat-icon"><i class="bi bi-piggy-bank-fill"></i></div>
+        <div class="stat-label">Net Savings</div>
+        <div class="stat-val" id="anNetSavings">₹0</div>
+        <div class="stat-sub" id="anSavingsRate">0% savings rate</div>
+    </div>
+    <div class="an-stat s-violet reveal" style="--delay:180ms">
+        <div class="stat-glow"></div>
+        <div class="stat-icon"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="stat-label">Top Category</div>
+        <div class="stat-val" id="anTopCat" style="font-size:1.1rem; padding-top:4px;">—</div>
+        <div class="stat-sub" id="anTopCatAmt"></div>
+    </div>
+</div>
+
+<!-- ══ AI Insights strip ══════════════════════════════════════ -->
+<div class="an-insights" id="anInsights">
+    <!-- Populated dynamically -->
+</div>
+
+<!-- ══ Main charts row ════════════════════════════════════════ -->
+<div class="an-grid">
+    <!-- Income vs Expense -->
+    <div class="an-card ac-violet" id="acCard1">
+        <div class="an-card-head">
+            <h3><span class="card-icon"><i class="bi bi-bar-chart-fill"></i></span>Income vs Expense</h3>
+            <div class="an-tabs" id="iveTabs">
+                <button class="an-tab active" data-ive="month">6M</button>
+                <button class="an-tab" data-ive="all">All</button>
+            </div>
+        </div>
+        <div class="chart-wrap" style="height:220px;"><canvas id="comparisonChart"></canvas></div>
+    </div>
+
+    <!-- Spending Trend -->
+    <div class="an-card ac-pink" id="acCard2">
+        <div class="an-card-head">
+            <h3><span class="card-icon"><i class="bi bi-activity"></i></span>Monthly Spending</h3>
+            <span class="an-badge live">● Live</span>
+        </div>
+        <div class="chart-wrap" style="height:220px;"><canvas id="spendingChart"></canvas></div>
+    </div>
+</div>
+
+<div class="an-grid">
+    <!-- Category Donut -->
+    <div class="an-card ac-orange" id="acCard3">
+        <div class="an-card-head">
+            <h3><span class="card-icon"><i class="bi bi-pie-chart-fill"></i></span>Spending by Category</h3>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <div class="chart-wrap" style="height:200px; width:200px; flex-shrink:0;"><canvas id="categoryChart"></canvas></div>
+            <div id="categoryLegend" style="flex:1; min-width:120px; display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <!-- Monthly Income -->
+    <div class="an-card ac-green" id="acCard4">
+        <div class="an-card-head">
+            <h3><span class="card-icon"><i class="bi bi-cash-stack"></i></span>Income Trend</h3>
+        </div>
+        <div class="chart-wrap" style="height:220px;"><canvas id="incomeChart"></canvas></div>
+    </div>
+</div>
+
+<div class="an-grid">
+    <!-- Budget Utilization -->
+    <div class="an-card ac-cyan" id="acCard5">
+        <div class="an-card-head">
+            <h3><span class="card-icon"><i class="bi bi-wallet-fill"></i></span>Budget Utilization</h3>
+        </div>
+        <div class="chart-wrap" style="height:200px;"><canvas id="budgetChart"></canvas></div>
+    </div>
+
+    <!-- Savings Goals -->
+    <div class="an-card ac-blue" id="acCard6">
+        <div class="an-card-head">
+            <h3><span class="card-icon"><i class="bi bi-trophy-fill"></i></span>Savings Goals Progress</h3>
+        </div>
+        <div class="goal-progress-stack" id="savingsProgressStack">
+            <!-- Populated dynamically -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}

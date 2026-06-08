@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+instance/
+.pytest_cache/
+*.log
+*.sqlite3
+.idea/
+*.iml
+

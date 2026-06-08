@@ -1,0 +1,834 @@
+{% extends "base.html" %}
+{% block title %}Welcome | SmartFinance{% endblock %}
+{% block body %}
+<style>
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .onboard-container {
+        width: 100%;
+        max-width: 580px;
+        min-height: 480px;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .onboard-slide {
+        display: none;
+        width: 100%;
+        animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .onboard-slide.active {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Brand Logo styling */
+    .brand-logo-large {
+        width: 80px;
+        height: 80px;
+        display: grid;
+        place-items: center;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #8b5cf6, #1d4ed8 52%, #00d18f);
+        color: #fff;
+        font-size: 2.5rem;
+        box-shadow: 0 14px 28px rgba(87, 73, 255, .3);
+        margin-bottom: 28px;
+    }
+
+    h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--text);
+        margin-bottom: 12px;
+    }
+
+    h1 span {
+        background: linear-gradient(135deg, var(--accent), #aa8eff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .step-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--accent);
+        background: rgba(124, 77, 255, 0.1);
+        padding: 5px 12px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(124, 77, 255, 0.15);
+    }
+
+    p.subtitle {
+        font-size: 0.96rem;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-bottom: 32px;
+        max-width: 460px;
+    }
+
+    /* Cards / Options List */
+    .choices-list {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+
+    .choice-card {
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        text-align: left;
+    }
+
+    .choice-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        box-shadow: var(--card-shadow);
+    }
+
+    .choice-card input[type="radio"],
+    .choice-card input[type="checkbox"] {
+        display: none;
+    }
+
+    .choice-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--surface-soft);
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 1.25rem;
+        color: var(--accent);
+        flex-shrink: 0;
+        transition: background 0.25s, color 0.25s;
+    }
+
+    .choice-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .choice-text strong {
+        font-size: 0.95rem;
+        color: var(--text);
+        font-weight: 700;
+    }
+
+    .choice-text span {
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+
+    .choice-circle {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--line);
+        position: relative;
+        flex-shrink: 0;
+        transition: border-color 0.25s;
+    }
+
+    .choice-circle::after {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: var(--accent);
+        opacity: 0;
+        transform: scale(0.5);
+        transition: opacity 0.2s, transform 0.2s;
+    }
+
+    /* Selected state */
+    .choice-card.selected {
+        border-color: var(--accent);
+        background: rgba(124, 77, 255, 0.06);
+    }
+
+    .choice-card.selected .choice-icon {
+        background: rgba(124, 77, 255, 0.12);
+        color: #fff;
+        background: var(--accent);
+    }
+
+    .choice-card.selected .choice-circle {
+        border-color: var(--accent);
+    }
+
+    .choice-card.selected .choice-circle::after {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* Primary Action Buttons */
+    .btn-onboard {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border: none;
+        color: white;
+        padding: 14px 44px;
+        border-radius: 30px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 8px 20px rgba(124, 77, 255, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-onboard:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(124, 77, 255, 0.35);
+    }
+
+    .btn-onboard:active {
+        transform: none;
+    }
+
+    /* Navigation dots/progress indicators */
+    .progress-bar-wrap {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 40px;
+    }
+
+    .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--line);
+        transition: background 0.3s, width 0.3s;
+    }
+
+    .progress-dot.active {
+        background: var(--accent);
+        width: 24px;
+        border-radius: 4px;
+    }
+
+    /* Selected state */
+    .choice-card.selected,
+    .choice-card:has(input:checked) {
+        border-color: var(--accent);
+        background: rgba(124, 77, 255, 0.06);
+    }
+
+    .choice-card.selected .choice-icon,
+    .choice-card:has(input:checked) .choice-icon {
+        background: var(--accent);
+        color: #fff;
+    }
+
+    .choice-card.selected .choice-circle,
+    .choice-card:has(input:checked) .choice-circle {
+        border-color: var(--accent);
+    }
+
+    .choice-card.selected .choice-circle::after,
+    .choice-card:has(input:checked) .choice-circle::after {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* absolute container slide positioning for skip link */
+    .onboard-slide {
+        position: relative;
+    }
+
+    .skip-link {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: transparent;
+        border: none;
+        padding: 4px 8px;
+    }
+
+    .skip-link:hover {
+        color: var(--accent);
+    }
+
+    /* 2-Column Choices Grid */
+    .choices-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        width: 100%;
+        margin-bottom: 24px;
+    }
+
+    @media (max-width: 576px) {
+        .choices-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+    }
+
+    /* Custom input field style */
+    .custom-goal-input {
+        width: 100%;
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 18px;
+        color: var(--text);
+        font-size: 0.92rem;
+        margin-bottom: 28px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .custom-goal-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.15);
+    }
+
+    /* Success Slide Styles */
+    .success-icon-wrap {
+        width: 84px;
+        height: 84px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--green), #00b0ff);
+        display: grid;
+        place-items: center;
+        font-size: 3rem;
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(0, 209, 143, 0.25);
+        margin-bottom: 32px;
+        animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes scaleIn {
+        from { transform: scale(0); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+<div class="onboard-container">
+    <form id="onboardingForm" style="width: 100%;">
+        <!-- Slide 0: Welcome -->
+        <div class="onboard-slide active" id="slide0">
+            <div class="brand-logo-large">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <h1>Welcome, <span>{{ claims.name.split(' ')[0] if claims.name else 'Hrusi' }}</span></h1>
+            <p class="subtitle">Let's personalize your experience in just a few seconds. Your answers help us build something amazing for you.</p>
+            <button type="button" class="btn-onboard" onclick="nextSlide(1)">
+                Let's Go <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Slide 1: Device Selection -->
+        <div class="onboard-slide" id="slide1">
+            <a href="javascript:void(0)" class="skip-link" onclick="skipStep(2)">Skip for now <i class="bi bi-chevron-right"></i></a>
+            <div class="step-badge">Step 1 of 5</div>
+            <h1>How will you use SmartFinance?</h1>
+            <p class="subtitle">Pick your primary device — we'll help you set up the best experience.</p>
+            <div class="choices-list">
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="device" value="phone">
+                    <div class="choice-icon"><i class="bi bi-phone"></i></div>
+                    <div class="choice-text">
+                        <strong>On my phone</strong>
+                        <span>Install as an app for daily on-the-go tracking</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="device" value="computer">
+                    <div class="choice-icon"><i class="bi bi-laptop"></i></div>
+                    <div class="choice-text">
+                        <strong>On my computer</strong>
+                        <span>Use in the browser at my desk</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+            </div>
+            <button type="button" class="btn-onboard" onclick="nextSlide(2)">
+                Continue <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Slide 2: Currency -->
+        <div class="onboard-slide" id="slide2">
+            <a href="javascript:void(0)" class="skip-link" onclick="skipStep(3)">Skip for now <i class="bi bi-chevron-right"></i></a>
+            <div class="step-badge">Step 2 of 5</div>
+            <h1>Pick your currency</h1>
+            <p class="subtitle">We'll use this across your dashboard, reports, and budgets.</p>
+            <div class="choices-list">
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="currency" value="₹">
+                    <div class="choice-icon">₹</div>
+                    <div class="choice-text">
+                        <strong>Indian Rupee</strong>
+                        <span>INR - Default currency</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="currency" value="$">
+                    <div class="choice-icon">$</div>
+                    <div class="choice-text">
+                        <strong>US Dollar</strong>
+                        <span>USD - United States Dollar</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="currency" value="€">
+                    <div class="choice-icon">€</div>
+                    <div class="choice-text">
+                        <strong>Euro</strong>
+                        <span>EUR - European Union Euro</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="currency" value="£">
+                    <div class="choice-icon">£</div>
+                    <div class="choice-text">
+                        <strong>British Pound</strong>
+                        <span>GBP - United Kingdom Pound</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="currency" value="¥">
+                    <div class="choice-icon">¥</div>
+                    <div class="choice-text">
+                        <strong>Japanese Yen</strong>
+                        <span>JPY - Japanese Yen</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+            </div>
+            <button type="button" class="btn-onboard" onclick="nextSlide(3)">
+                Continue <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Slide 3: What Brings You Here -->
+        <div class="onboard-slide" id="slide3">
+            <a href="javascript:void(0)" class="skip-link" onclick="skipStep(4)">Skip for now <i class="bi bi-chevron-right"></i></a>
+            <div class="step-badge">Step 3 of 5</div>
+            <h1>What brings you here?</h1>
+            <p class="subtitle">Select all that apply — we'll tailor your dashboard accordingly.</p>
+            <div class="choices-grid">
+                <label class="choice-card">
+                    <input type="checkbox" name="goals" value="track_expenses">
+                    <div class="choice-icon"><i class="bi bi-wallet2"></i></div>
+                    <div class="choice-text">
+                        <strong>Track Daily Expenses</strong>
+                        <span>Know where every penny goes</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card">
+                    <input type="checkbox" name="goals" value="budget_smarter">
+                    <div class="choice-icon"><i class="bi bi-piggy-bank"></i></div>
+                    <div class="choice-text">
+                        <strong>Budget Smarter</strong>
+                        <span>Set limits and stick to them</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card">
+                    <input type="checkbox" name="goals" value="track_investments">
+                    <div class="choice-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div class="choice-text">
+                        <strong>Track Investments</strong>
+                        <span>Monitor your portfolio growth</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card">
+                    <input type="checkbox" name="goals" value="ai_insights">
+                    <div class="choice-icon"><i class="bi bi-stars"></i></div>
+                    <div class="choice-text">
+                        <strong>AI Financial Insights</strong>
+                        <span>Get smart spending analysis</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card">
+                    <input type="checkbox" name="goals" value="financial_reports">
+                    <div class="choice-icon"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                    <div class="choice-text">
+                        <strong>Financial Reports</strong>
+                        <span>Visualize your money flow</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card">
+                    <input type="checkbox" name="goals" value="multiple_accounts">
+                    <div class="choice-icon"><i class="bi bi-credit-card"></i></div>
+                    <div class="choice-text">
+                        <strong>Multiple Accounts</strong>
+                        <span>Manage all wallets in one place</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+            </div>
+            <input type="text" class="custom-goal-input" name="custom_goal" placeholder="Something else? Tell us...">
+            <button type="button" class="btn-onboard" onclick="nextSlide(4)">
+                Continue <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Slide 4: Profession -->
+        <div class="onboard-slide" id="slide4">
+            <a href="javascript:void(0)" class="skip-link" onclick="skipStep(5)">Skip for now <i class="bi bi-chevron-right"></i></a>
+            <div class="step-badge">Step 4 of 5</div>
+            <h1>Choose your profile</h1>
+            <p class="subtitle">We'll tailor your insights, advice, and advisor tone based on this.</p>
+            <div class="choices-list">
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="profession" value="Salaried">
+                    <div class="choice-icon"><i class="bi bi-briefcase"></i></div>
+                    <div class="choice-text">
+                        <strong>Salaried Professional</strong>
+                        <span>Monthly fixed paycheck or regular employment</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="profession" value="Freelancer">
+                    <div class="choice-icon"><i class="bi bi-person-workspace"></i></div>
+                    <div class="choice-text">
+                        <strong>Freelancer / Contractor</strong>
+                        <span>Variable contract payments and gig earnings</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="profession" value="Business Owner">
+                    <div class="choice-icon"><i class="bi bi-shop"></i></div>
+                    <div class="choice-text">
+                        <strong>Business Owner</strong>
+                        <span>Corporate profit distributions or commerce sales</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="profession" value="Student">
+                    <div class="choice-icon"><i class="bi bi-mortarboard"></i></div>
+                    <div class="choice-text">
+                        <strong>Student / Intern</strong>
+                        <span>Pocket money, stipends, or educational grants</span>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+            </div>
+            <button type="button" class="btn-onboard" onclick="nextSlide(5)">
+                Continue <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Slide 5: Referral Source -->
+        <div class="onboard-slide" id="slide5">
+            <a href="javascript:void(0)" class="skip-link" onclick="skipFinalStep()">Skip for now <i class="bi bi-chevron-right"></i></a>
+            <div class="step-badge">Step 5 of 5</div>
+            <h1>How did you find us?</h1>
+            <p class="subtitle">Helps us reach more people like you.</p>
+            <div class="choices-list">
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="referral_source" value="google">
+                    <div class="choice-icon"><i class="bi bi-search"></i></div>
+                    <div class="choice-text">
+                        <strong>Google Search</strong>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="referral_source" value="social_media">
+                    <div class="choice-icon"><i class="bi bi-share"></i></div>
+                    <div class="choice-text">
+                        <strong>Social Media</strong>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="referral_source" value="friend_family">
+                    <div class="choice-icon"><i class="bi bi-people"></i></div>
+                    <div class="choice-text">
+                        <strong>Friend or Family</strong>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="referral_source" value="app_store">
+                    <div class="choice-icon"><i class="bi bi-phone"></i></div>
+                    <div class="choice-text">
+                        <strong>App Store / Play Store</strong>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="referral_source" value="blog_article">
+                    <div class="choice-icon"><i class="bi bi-globe"></i></div>
+                    <div class="choice-text">
+                        <strong>Blog or Article</strong>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+                <label class="choice-card" onclick="selectCard(this)">
+                    <input type="radio" name="referral_source" value="other">
+                    <div class="choice-icon"><i class="bi bi-chat-dots"></i></div>
+                    <div class="choice-text">
+                        <strong>Somewhere else</strong>
+                    </div>
+                    <div class="choice-circle"></div>
+                </label>
+            </div>
+            <button type="submit" class="btn-onboard">
+                Finish Setup <i class="bi bi-check-lg"></i>
+            </button>
+        </div>
+
+        <!-- Slide 6: Success -->
+        <div class="onboard-slide" id="slide6">
+            <div class="success-icon-wrap">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h1>You're all set!</h1>
+            <p class="subtitle">Your personalized dashboard is ready. Start tracking your finances like a pro.</p>
+            <button type="button" class="btn-onboard" onclick="window.location.href='/dashboard'">
+                Open Dashboard <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+
+    <!-- Progress dots -->
+    <div class="progress-bar-wrap" id="progressDots">
+        <div class="progress-dot active" id="dot0"></div>
+        <div class="progress-dot" id="dot1"></div>
+        <div class="progress-dot" id="dot2"></div>
+        <div class="progress-dot" id="dot3"></div>
+        <div class="progress-dot" id="dot4"></div>
+        <div class="progress-dot" id="dot5"></div>
+    </div>
+</div>
+
+<script>
+    function selectCard(labelEl) {
+        // Toggle selected styling
+        const siblings = labelEl.parentElement.querySelectorAll('.choice-card');
+        siblings.forEach(el => el.classList.remove('selected'));
+        labelEl.classList.add('selected');
+        
+        // Find input inside and select it
+        const input = labelEl.querySelector('input[type="radio"]');
+        if (input) {
+            input.checked = true;
+        }
+    }
+
+    function nextSlide(slideIndex) {
+        const activeSlide = document.querySelector('.onboard-slide.active');
+        
+        // Validation check for checkbox slide (Slide 3)
+        if (activeSlide.id === 'slide3') {
+            const checkboxes = activeSlide.querySelectorAll('input[type="checkbox"]:checked');
+            const customInput = activeSlide.querySelector('input[name="custom_goal"]');
+            if (checkboxes.length === 0 && (!customInput || !customInput.value.trim())) {
+                toast("Please select at least one option or type in 'Something else', or click 'Skip for now'.", "error");
+                return;
+            }
+        } else {
+            // Validation check for standard inputs in other slides
+            const inputs = activeSlide.querySelectorAll('input[type="radio"]');
+            if (inputs.length > 0) {
+                let selected = false;
+                inputs.forEach(input => {
+                    if (input.checked) selected = true;
+                });
+                if (!selected) {
+                    toast("Please select an option before continuing.", "error");
+                    return;
+                }
+            }
+        }
+
+        // Hide active slide
+        activeSlide.classList.remove('active');
+        
+        // Show target slide
+        const nextSlide = document.getElementById('slide' + slideIndex);
+        if (nextSlide) {
+            nextSlide.classList.add('active');
+        }
+
+        // Update progress dots
+        document.querySelectorAll('.progress-dot').forEach(el => el.classList.remove('active'));
+        const dot = document.getElementById('dot' + slideIndex);
+        if (dot) {
+            dot.classList.add('active');
+        }
+    }
+
+    function skipStep(nextSlideIndex) {
+        // Hide active slide
+        const activeSlide = document.querySelector('.onboard-slide.active');
+        if (activeSlide) {
+            activeSlide.classList.remove('active');
+        }
+        
+        // Show target slide
+        const nextSlide = document.getElementById('slide' + nextSlideIndex);
+        if (nextSlide) {
+            nextSlide.classList.add('active');
+        }
+
+        // Update progress dots
+        document.querySelectorAll('.progress-dot').forEach(el => el.classList.remove('active'));
+        const dot = document.getElementById('dot' + nextSlideIndex);
+        if (dot) {
+            dot.classList.add('active');
+        }
+    }
+
+    async function skipFinalStep() {
+        // Submit whatever is filled so far, bypassing the final required checks
+        const form = document.getElementById('onboardingForm');
+        const formData = new FormData(form);
+        const device = formData.get('device');
+        const currency = formData.get('currency');
+        const goals = formData.getAll('goals');
+        const custom_goal = formData.get('custom_goal');
+        const profession = formData.get('profession');
+        const referral_source = formData.get('referral_source'); // Will be null since it's skipped
+
+        try {
+            await api("/api/auth/me", {
+                method: "PUT",
+                body: JSON.stringify({
+                    device: device,
+                    currency: currency,
+                    goals: goals,
+                    custom_goal: custom_goal,
+                    profession: profession,
+                    referral_source: referral_source,
+                    has_onboarded: true
+                })
+            });
+
+            // Hide all slides and progress dots
+            document.querySelectorAll('.onboard-slide').forEach(el => el.classList.remove('active'));
+            const dots = document.getElementById('progressDots');
+            if (dots) dots.style.display = 'none';
+
+            // Show success slide
+            const successSlide = document.getElementById('slide6');
+            if (successSlide) {
+                successSlide.classList.add('active');
+            }
+        } catch (err) {
+            toast(err.message || "Onboarding failed. Please try again.", "error");
+        }
+    }
+
+    // Submit handler
+    document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const activeSlide = document.querySelector('.onboard-slide.active');
+        const inputs = activeSlide.querySelectorAll('input[type="radio"]');
+        if (inputs.length > 0) {
+            let selected = false;
+            inputs.forEach(input => {
+                if (input.checked) selected = true;
+            });
+            if (!selected) {
+                toast("Please select an option before completing.", "error");
+                return;
+            }
+        }
+
+        const formData = new FormData(e.target);
+        const device = formData.get('device');
+        const currency = formData.get('currency');
+        const goals = formData.getAll('goals');
+        const custom_goal = formData.get('custom_goal');
+        const profession = formData.get('profession');
+        const referral_source = formData.get('referral_source');
+
+        try {
+            // Send updates to user claims
+            await api("/api/auth/me", {
+                method: "PUT",
+                body: JSON.stringify({
+                    device: device,
+                    currency: currency,
+                    goals: goals,
+                    custom_goal: custom_goal,
+                    profession: profession,
+                    referral_source: referral_source,
+                    has_onboarded: true
+                })
+            });
+
+            // Hide all slides and progress dots
+            document.querySelectorAll('.onboard-slide').forEach(el => el.classList.remove('active'));
+            const dots = document.getElementById('progressDots');
+            if (dots) dots.style.display = 'none';
+
+            // Show success slide
+            const successSlide = document.getElementById('slide6');
+            if (successSlide) {
+                successSlide.classList.add('active');
+            }
+        } catch (err) {
+            toast(err.message || "Onboarding failed. Please try again.", "error");
+        }
+    });
+</script>
+{% endblock %}

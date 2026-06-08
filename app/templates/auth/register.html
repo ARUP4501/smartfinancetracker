@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Register | SmartFinance{% endblock %}
+{% block body %}
+<main class="auth-screen">
+    <section class="auth-panel wide">
+        <a href="/" class="brand-mark">SmartFinance</a>
+        <h1>Create account</h1>
+        <form id="registerForm" class="stack-form">
+            <input class="form-control form-control-lg" name="name" placeholder="Full name" required>
+            <input class="form-control form-control-lg" name="email" type="email" placeholder="Email" required>
+            <input class="form-control form-control-lg" id="passwordInput" name="password" type="password" placeholder="Strong password" required>
+            <div class="password-meter"><span></span></div>
+            <small id="passwordHint">Use uppercase, lowercase, number, special character, and 8+ characters.</small>
+            <input class="form-control form-control-lg" id="confirmPasswordInput" name="confirm_password" type="password" placeholder="Confirm password" required>
+            <button id="registerSubmitBtn" class="btn btn-accent btn-lg w-100" type="submit">Create Account</button>
+        </form>
+        <div class="auth-links"><a href="{{ url_for('web.login_page') }}">Already registered?</a></div>
+        <div id="authMessage" class="form-message"></div>
+    </section>
+</main>
+{% endblock %}

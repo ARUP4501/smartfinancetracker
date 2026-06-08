@@ -1,0 +1,172 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Dashboard | SmartFinance{% endblock %}
+{% block page_title %}{{ claims.name }}{% endblock %}
+{% block page_content %}
+{% set budget_value = summary.budget_utilization if summary.budget_utilization <= 100 else 100 %}
+{% set health_score = summary.health.score %}
+<section class="dashboard-grid dashboard-cards">
+    {% set cards = [
+        ("Current Balance", summary.balance, "bi-wallet2", "violet", summary.trends.balance),
+        ("Total Income", summary.total_income, "bi-arrow-up-circle", "green", summary.trends.total_income),
+        ("Total Expenses", summary.total_expenses, "bi-arrow-down-circle", "pink", summary.trends.total_expenses),
+        ("Monthly Savings", summary.monthly_savings, "bi-piggy-bank", "blue", summary.trends.monthly_savings)
+    ] %}
+    {% for label, value, icon, tone, trend in cards %}
+    <article class="kpi-card {{ tone }} reveal" style="--delay: {{ loop.index0 * 80 }}ms">
+        <div class="kpi-head">
+            <span class="metric-icon {{ tone }}"><i class="bi {{ icon }}"></i></span>
+            <button class="kebab" type="button" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <span class="kpi-label">{{ label }}</span>
+        <strong data-kpi-value="{{ ['balance', 'total_income', 'total_expenses', 'monthly_savings'][loop.index0] }}">&#8377;{{ "{:,.2f}".format(value) }}</strong>
+        <small class="trend {{ trend.direction }}" data-kpi-trend="{{ ['balance', 'total_income', 'total_expenses', 'monthly_savings'][loop.index0] }}">
+            <i class="bi {{ 'bi-caret-up-fill' if trend.direction == 'up' else 'bi-caret-down-fill' if trend.direction == 'down' else 'bi-dash-lg' }}"></i>
+            {{ trend.label }} <span>vs last month</span>
+        </small>
+        <svg class="sparkline" viewBox="0 0 260 70" preserveAspectRatio="none" aria-hidden="true">
+            <path class="spark-fill" d="M0,55 C18,51 24,61 41,54 S63,39 82,48 S106,31 124,41 S145,25 166,37 S188,45 207,24 S231,36 260,26 L260,70 L0,70 Z"></path>
+            <path class="spark-stroke" d="M0,55 C18,51 24,61 41,54 S63,39 82,48 S106,31 124,41 S145,25 166,37 S188,45 207,24 S231,36 260,26"></path>
+        </svg>
+    </article>
+    {% endfor %}
+</section>
+
+<section class="dashboard-main-grid">
+    <article class="panel budget-panel reveal" style="--delay: 120ms">
+        <div class="panel-head"><h2>Budget Utilization</h2><a href="{{ url_for('web.budgets_page') }}">View Budgets <i class="bi bi-arrow-right"></i></a></div>
+        <div class="budget-layout">
+            <div class="budget-ring">
+                <canvas id="budgetUtilizationChart" width="214" height="214"></canvas>
+                <div class="budget-center"><strong>{{ "{:.0f}".format(summary.budget_utilization) }}%</strong><span>of total budget used</span></div>
+            </div>
+            <div class="budget-list" id="budgetAlerts">
+                {% for item in summary.budget_alerts[:3] %}
+                <div class="budget-row">
+                    <span class="mini-icon {{ item.tone }}"><i class="bi {{ item.icon }}"></i></span>
+                    <strong>{{ item.category }}</strong>
+                    <small>&#8377;{{ "{:,.0f}".format(item.spent) }} / &#8377;{{ "{:,.0f}".format(item.amount) }}</small>
+                    <b>{{ "{:.1f}".format(item.usage) if item.usage % 1 else "{:.0f}".format(item.usage) }}%</b>
+                </div>
+                {% else %}
+                {% for label, spent, total, percent, tone in [("Food", 4800, 7000, 68, "green"), ("Shopping", 3200, 5000, 64, "orange"), ("Travel", 2400, 4000, 60, "blue"), ("Entertainment", 1600, 3000, 53, "pink")] %}
+                <div class="budget-row">
+                    <span class="mini-icon {{ tone }}"><i class="bi {{ 'bi-cup-hot' if label == 'Food' else 'bi-bag' if label == 'Shopping' else 'bi-airplane' if label == 'Travel' else 'bi-ticket-perforated' }}"></i></span>
+                    <strong>{{ label }}</strong>
+                    <small>&#8377;{{ "{:,.0f}".format(spent) }} / &#8377;{{ "{:,.0f}".format(total) }}</small>
+                    <b>{{ percent }}%</b>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </article>
+
+    <article class="panel goals-panel reveal" style="--delay: 180ms">
+        <div class="panel-head"><h2>Savings Goals</h2><a href="{{ url_for('web.goals_page') }}">View All <i class="bi bi-arrow-right"></i></a></div>
+        <div class="goal-stack">
+            {% for goal in summary.goals[:3] %}
+            {% set completion = ((goal.current_amount or 0) / (goal.target_amount or 1) * 100) | round(0) %}
+            <div class="goal-row">
+                <span class="goal-icon {{ loop.cycle('violet','green','orange') }}"><i class="bi {{ loop.cycle('bi-laptop','bi-airplane','bi-shield-fill-check') }}"></i></span>
+                <div><strong>{{ goal.name }}</strong><small>&#8377;{{ "{:,.0f}".format(goal.current_amount or 0) }} / &#8377;{{ "{:,.0f}".format(goal.target_amount or 0) }}</small></div>
+                <span class="goal-bar"><i style="width: {{ completion if completion <= 100 else 100 }}%"></i></span>
+                <b>{{ completion }}%</b>
+            </div>
+            {% else %}
+            <div class="d-flex flex-column align-items-center justify-content-center text-center p-4" style="min-height: 180px; color: var(--muted);">
+                <i class="bi bi-bullseye" style="font-size: 2.2rem; opacity: 0.25; margin-bottom: 8px;"></i>
+                <p class="empty-state mb-3" style="font-size: 0.88rem;">No savings goals created yet.</p>
+                <a class="btn btn-sm btn-accent" href="{{ url_for('web.goals_page') }}" style="border-radius: 20px; padding: 5px 15px; font-size: 0.75rem; font-weight: 600;">
+                    <i class="bi bi-plus-lg me-1"></i>Create Goal
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+
+<section class="content-grid lower-dashboard-grid">
+    <article class="panel chart-panel reveal" style="--delay: 220ms">
+        <div class="panel-head">
+            <h2>Income vs Expense</h2>
+            <div class="period-control-wrap">
+                <div class="period-segment" role="tablist" aria-label="Chart period">
+                    <button type="button" data-chart-mode="day">Day</button>
+                    <button type="button" data-chart-mode="week">Week</button>
+                    <button class="active" type="button" data-chart-mode="month">Month</button>
+                    <button type="button" data-chart-mode="custom">Custom</button>
+                </div>
+                <div class="custom-range-popover" id="customRangePopover">
+                    <div class="range-shortcuts">
+                        <button type="button" data-custom-shortcut="7">Last 7 days</button>
+                        <button type="button" data-custom-shortcut="30">Last 30 days</button>
+                        <button type="button" data-custom-shortcut="90">Last 90 days</button>
+                        <button type="button" data-custom-shortcut="this-month">This Month</button>
+                        <button type="button" data-custom-shortcut="last-month">Last Month</button>
+                        <button type="button" data-custom-shortcut="year">This Year</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-frame">
+            <canvas id="dashboardChart"></canvas>
+        </div>
+    </article>
+    <article class="panel transaction-panel reveal" style="--delay: 260ms">
+        <div class="panel-head"><h2>Recent Transactions</h2><a href="{{ url_for('web.transactions_page') }}">View All <i class="bi bi-arrow-right"></i></a></div>
+        <div class="transaction-list" id="recentTransactionList">
+            {% for item in summary.recent_transactions[:5] %}
+            <div class="transaction-item">
+                <span class="mini-icon {{ 'green' if item.type == 'income' else 'pink' }}"><i class="bi {{ 'bi-cash-stack' if item.type == 'income' else 'bi-credit-card' }}"></i></span>
+                <div><h6>{{ item.description }}</h6><small>{{ item.type|title }} • {{ item.category }}</small></div>
+                <time>{{ (item.date|string)[:10] }}</time>
+                <strong class="{{ 'text-success' if item.type == 'income' else 'text-danger' }}">{{ '+' if item.type == 'income' else '-' }} &#8377;{{ "{:,.0f}".format(item.amount) }}</strong>
+            </div>
+            {% else %}
+            <p class="empty-state">No transactions yet.</p>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+
+<section class="content-grid side-dashboard-grid">
+    <article class="panel health-panel reveal" style="--delay: 300ms">
+        <div class="panel-head"><h2>Financial Health <i class="bi bi-info-circle"></i></h2></div>
+        <div class="health-gauge" id="healthGauge" style="--score: {{ health_score }}">
+            <svg viewBox="0 0 240 130" aria-label="Financial health score {{ health_score }} out of 100">
+                <defs>
+                    <linearGradient id="healthGradient" x1="35" y1="108" x2="205" y2="108" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#ff4f5f"></stop>
+                        <stop offset="35%" stop-color="#ff7a1a"></stop>
+                        <stop offset="62%" stop-color="#f7c61b"></stop>
+                        <stop offset="100%" stop-color="#17c878"></stop>
+                    </linearGradient>
+                </defs>
+                <path class="health-track" pathLength="100" d="M35 108 A85 85 0 0 1 205 108"></path>
+                <path class="health-progress" pathLength="100" d="M35 108 A85 85 0 0 1 205 108"></path>
+                <path class="health-seg health-red" d="M35 108 A85 85 0 0 1 60 48"></path>
+                <path class="health-seg health-orange" d="M60 48 A85 85 0 0 1 120 23"></path>
+                <path class="health-seg health-yellow" d="M120 23 A85 85 0 0 1 180 48"></path>
+                <path class="health-seg health-green" d="M180 48 A85 85 0 0 1 205 108"></path>
+                <line class="health-tick" x1="60" y1="48" x2="67" y2="55"></line>
+                <line class="health-tick" x1="120" y1="23" x2="120" y2="33"></line>
+                <line class="health-tick" x1="180" y1="48" x2="173" y2="55"></line>
+            </svg>
+            <span><b id="healthScore">{{ health_score }}</b><small>/100</small></span>
+        </div>
+        <h3 id="healthStatus">{{ summary.health.status }}</h3>
+        <p id="healthMessage">{{ summary.health.message }}</p>
+        <a href="{{ url_for('web.analytics_page') }}">View details <i class="bi bi-arrow-right"></i></a>
+    </article>
+    <article class="panel ai-panel reveal" style="--delay: 340ms">
+        <div class="panel-head"><h2><i class="bi bi-stars"></i> AI Insights</h2><a href="{{ url_for('web.analytics_page') }}">View All <i class="bi bi-arrow-right"></i></a></div>
+        <div id="insightList" class="insight-list compact-insights">
+            <div class="insight-item"><span class="mini-icon green"><i class="bi bi-graph-up-arrow"></i></span><div><strong>Income increased</strong><p>Your income is 18% higher than last month.</p></div><i class="bi bi-arrow-up-right-circle"></i></div>
+            <div class="insight-item"><span class="mini-icon orange"><i class="bi bi-cart"></i></span><div><strong>High spending alert</strong><p>Shopping expenses increased by 25%.</p></div><i class="bi bi-chevron-right"></i></div>
+            <div class="insight-item"><span class="mini-icon blue"><i class="bi bi-piggy-bank"></i></span><div><strong>Great savings!</strong><p>Your savings rate is healthy. Keep it up!</p></div><i class="bi bi-arrow-up-right-circle"></i></div>
+        </div>
+    </article>
+
+</section>
+
+{% endblock %}

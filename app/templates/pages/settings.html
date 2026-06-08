@@ -1,0 +1,459 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Settings | SmartFinance{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Manage your profile, preferences, security, and custom categories{% endblock %}
+
+{% block page_content %}
+<!-- Settings layout grid -->
+<div class="row g-4 mt-1">
+    <!-- Left Column: Settings List -->
+    <div class="col-lg-6">
+        <div class="panel p-4 border rounded-3 h-100" style="background: var(--surface); border-color: var(--line) !important;">
+            <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                <h3 class="fw-bold mb-0" style="font-size: 1.25rem;"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>System & Account Settings</h3>
+            </div>
+            
+            <div class="d-flex flex-column gap-3">
+                <!-- Profile Settings Row -->
+                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenProfileModal">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="mini-icon blue" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-person-fill"></i></span>
+                        <div>
+                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Profile Details</strong>
+                            <small class="text-muted" style="font-size: 0.82rem;">Update name and select your profession (Current: {{ claims.get('profession', 'Salaried') }})</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                </div>
+
+                <!-- Security / Change Password Row -->
+                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenPasswordModal">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="mini-icon rose" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-shield-lock-fill"></i></span>
+                        <div>
+                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Security Settings</strong>
+                            <small class="text-muted" style="font-size: 0.82rem;">Manage your password and secure your account</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                </div>
+
+                <!-- Currency & Payment Settings Row -->
+                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenCurrencyModal">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="mini-icon green" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-currency-exchange"></i></span>
+                        <div>
+                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Currency & Wallet</strong>
+                            <small class="text-muted" style="font-size: 0.82rem;">Set primary currency (Current: {{ claims.get('currency', '₹') }}) and default payment mode</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                </div>
+
+                <!-- Budget Limits & Warnings Row -->
+                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenBudgetModal">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="mini-icon orange" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-bell-fill"></i></span>
+                        <div>
+                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Budget Threshold Alerts</strong>
+                            <small class="text-muted" style="font-size: 0.82rem;">Change alert limit (Current: {{ claims.get('budget_warning_threshold', 80) }}% usage warning)</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                </div>
+
+                <!-- AI Tone Row -->
+                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenAiModal">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="mini-icon violet" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-stars"></i></span>
+                        <div>
+                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">AI Advisor Persona</strong>
+                            <small class="text-muted" style="font-size: 0.82rem;">Configure advisor chatbot response tone (Current: {{ claims.get('ai_tone', 'Professional') }})</small>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Category Management -->
+    <div class="col-lg-6">
+        <div class="panel p-4 border rounded-3 h-100" style="background: var(--surface); border-color: var(--line) !important;">
+            <div class="panel-head border-bottom pb-3 mb-4 d-flex justify-content-between align-items-center" style="border-color: var(--line) !important;">
+                <h3 class="fw-bold mb-0" style="font-size: 1.25rem;"><i class="bi bi-tags me-2 text-success"></i>Categories</h3>
+                <button class="btn btn-brown btn-sm d-flex align-items-center gap-1" id="openAddCategoryBtn" type="button">
+                    <i class="bi bi-plus-lg"></i> Add Category
+                </button>
+            </div>
+
+            <!-- Categories Tabs: Expense / Income -->
+            <ul class="nav nav-tabs border-bottom mb-3" style="border-color: var(--line) !important;">
+                <li class="nav-item">
+                    <button class="nav-link active bg-transparent border-0 pb-2 fw-bold" id="expenseTabBtn" type="button" style="border-bottom: 2px solid var(--accent) !important; color: var(--text);">Expense Categories</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link bg-transparent border-0 pb-2" id="incomeTabBtn" type="button" style="color: var(--muted);">Income Categories</button>
+                </li>
+            </ul>
+            
+            <!-- Category List Wrapper -->
+            <div id="categoryListContainer" class="d-flex flex-column gap-2" style="max-height: 420px; overflow-y: auto;">
+                <!-- Filled dynamically by categories list -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODALS SECTION
+     ========================================== -->
+
+<!-- 1. Profile Details Modal -->
+<div class="modal-backdrop" id="profileModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="profileModalTitle" style="max-width: 460px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
+        <button class="modal-close-btn" id="closeProfileModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-person-fill text-primary" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="profileModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900;">Profile Details</h3>
+                <small class="text-muted" style="font-size: 0.85rem;">Update name and settings</small>
+            </div>
+        </div>
+        <form id="profileSettingsForm" class="stack-form">
+            <div>
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Display Name</label>
+                <input type="text" id="settingName" class="form-control" value="{{ claims.name }}" required>
+            </div>
+            <div class="mt-3">
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Email Address</label>
+                <input type="email" class="form-control text-muted" value="{{ claims.email }}" disabled style="opacity: 0.5; cursor: not-allowed;">
+            </div>
+            <div class="mt-3">
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Profession</label>
+                <select id="settingProfession" class="form-select" required>
+                    <option value="Salaried" {% if claims.get('profession') == 'Salaried' %}selected{% endif %}>💼 Salaried / Employee</option>
+                    <option value="Freelancer" {% if claims.get('profession') == 'Freelancer' %}selected{% endif %}>💻 Freelancer / Contractor</option>
+                    <option value="Business Owner" {% if claims.get('profession') == 'Business Owner' %}selected{% endif %}>🏢 Business Owner / Entrepreneur</option>
+                    <option value="Investor" {% if claims.get('profession') == 'Investor' %}selected{% endif %}>📈 Professional Investor</option>
+                    <option value="Student" {% if claims.get('profession') == 'Student' %}selected{% endif %}>🎓 Student</option>
+                    <option value="Retired" {% if claims.get('profession') == 'Retired' %}selected{% endif %}>👴 Retired</option>
+                    <option value="Unemployed" {% if claims.get('profession') == 'Unemployed' %}selected{% endif %}>🏠 Homemaker / Other</option>
+                </select>
+            </div>
+            <div class="mt-3">
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Monthly Income Goal</label>
+                <input type="number" id="settingIncomeGoal" class="form-control" value="{{ claims.get('monthly_income_goal') or 0 }}" min="0" placeholder="e.g. 50000">
+            </div>
+            <div class="mt-3">
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Investment Risk Tolerance</label>
+                <select id="settingRiskProfile" class="form-select" required>
+                    <option value="Conservative" {% if claims.get('risk_profile') == 'Conservative' %}selected{% endif %}>🛡️ Conservative (Low Risk)</option>
+                    <option value="Moderate" {% if claims.get('risk_profile') == 'Moderate' %}selected{% endif %}>⚖️ Moderate (Medium Risk)</option>
+                    <option value="Aggressive" {% if claims.get('risk_profile') == 'Aggressive' %}selected{% endif %}>🚀 Aggressive (High Risk)</option>
+                </select>
+            </div>
+            <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--line) !important;">
+                <button class="btn btn-ghost border-0 text-muted" type="button" id="cancelProfileModalBtn">Cancel</button>
+                <button class="btn btn-brown px-4 py-2" type="submit">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. Security (Change Password) Modal -->
+<div class="modal-backdrop" id="passwordModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="passwordModalTitle" style="max-width: 440px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
+        <button class="modal-close-btn" id="closePasswordModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-shield-lock-fill text-danger" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="passwordModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900;">Change Password</h3>
+                <small class="text-muted" style="font-size: 0.85rem;">Secure your account access</small>
+            </div>
+        </div>
+        <form id="changePasswordForm" class="stack-form">
+            <div>
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Current Password</label>
+                <input type="password" id="currentPasswordInput" class="form-control" placeholder="••••••••" required>
+            </div>
+            <div class="mt-3">
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">New Password</label>
+                <input type="password" id="newPasswordInput" class="form-control" placeholder="••••••••" required>
+            </div>
+            <div class="mt-3">
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Confirm New Password</label>
+                <input type="password" id="confirmNewPasswordInput" class="form-control" placeholder="••••••••" required>
+            </div>
+            <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--line) !important;">
+                <button class="btn btn-ghost border-0 text-muted" type="button" id="cancelPasswordModalBtn">Cancel</button>
+                <button class="btn btn-danger px-4 py-2" type="submit" style="background: #ef4444; border: 0; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);">Save Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 3. Currency & Payment Modal -->
+<div class="modal-backdrop" id="currencyModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="currencyModalTitle" style="max-width: 440px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
+        <button class="modal-close-btn" id="closeCurrencyModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-currency-exchange text-success" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="currencyModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900;">Currency & Wallet</h3>
+                <small class="text-muted" style="font-size: 0.85rem;">Set display formatting and defaults</small>
+            </div>
+        </div>
+        <form id="currencySettingsForm" class="stack-form">
+            <div>
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Primary Currency</label>
+                <select id="settingCurrency" class="form-select" required>
+                    <option value="₹" {% if claims.get('currency', '₹') == '₹' %}selected{% endif %}>₹ Indian Rupee (INR)</option>
+                    <option value="$" {% if claims.get('currency') == '$' %}selected{% endif %}>$ US Dollar (USD)</option>
+                    <option value="€" {% if claims.get('currency') == '€' %}selected{% endif %}>€ Euro (EUR)</option>
+                    <option value="£" {% if claims.get('currency') == '£' %}selected{% endif %}>£ British Pound (GBP)</option>
+                    <option value="¥" {% if claims.get('currency') == '¥' %}selected{% endif %}>¥ Japanese Yen (JPY)</option>
+                </select>
+            </div>
+            <div class="mt-3">
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Default Wallet (Pre-fill new transactions)</label>
+                <select id="settingDefaultWallet" class="form-select" required>
+                    <option value="Default" {% if claims.get('default_wallet', 'Default') == 'Default' %}selected{% endif %}>💵 Default Wallet</option>
+                    <option value="Cash" {% if claims.get('default_wallet') == 'Cash' %}selected{% endif %}>💸 Cash Wallet</option>
+                    <option value="Card" {% if claims.get('default_wallet') == 'Card' %}selected{% endif %}>💳 Card Wallet</option>
+                </select>
+            </div>
+            <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--line) !important;">
+                <button class="btn btn-ghost border-0 text-muted" type="button" id="cancelCurrencyModalBtn">Cancel</button>
+                <button class="btn btn-brown px-4 py-2" type="submit">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 4. Budget Warning Modal -->
+<div class="modal-backdrop" id="budgetLimitModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="budgetLimitModalTitle" style="max-width: 440px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
+        <button class="modal-close-btn" id="closeBudgetModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-bell-fill text-warning" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="budgetLimitModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900;">Budget Warning Alerts</h3>
+                <small class="text-muted" style="font-size: 0.85rem;">Set warning thresholds</small>
+            </div>
+        </div>
+        <form id="budgetSettingsForm" class="stack-form">
+            <div>
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Alert Threshold</label>
+                <select id="settingBudgetThreshold" class="form-select" required>
+                    <option value="70" {% if claims.get('budget_warning_threshold', 80) == 70 %}selected{% endif %}>⚠️ Alert at 70% usage</option>
+                    <option value="80" {% if claims.get('budget_warning_threshold', 80) == 80 %}selected{% endif %}>⚠️ Alert at 80% usage</option>
+                    <option value="90" {% if claims.get('budget_warning_threshold', 80) == 90 %}selected{% endif %}>⚠️ Alert at 90% usage</option>
+                    <option value="100" {% if claims.get('budget_warning_threshold', 80) == 100 %}selected{% endif %}>⚠️ Alert at 100% usage (No warning)</option>
+                </select>
+            </div>
+            <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--line) !important;">
+                <button class="btn btn-ghost border-0 text-muted" type="button" id="cancelBudgetModalBtn">Cancel</button>
+                <button class="btn btn-brown px-4 py-2" type="submit">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 5. AI Advisor Persona Modal -->
+<div class="modal-backdrop" id="aiToneModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="aiToneModalTitle" style="max-width: 440px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
+        <button class="modal-close-btn" id="closeAiModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-stars text-violet" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="aiToneModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900;">AI Advisor Persona</h3>
+                <small class="text-muted" style="font-size: 0.85rem;">Set advisor chatbot tone</small>
+            </div>
+        </div>
+        <form id="aiSettingsForm" class="stack-form">
+            <div>
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Response Tone</label>
+                <select id="settingAiTone" class="form-select" required>
+                    <option value="Professional" {% if claims.get('ai_tone', 'Professional') == 'Professional' %}selected{% endif %}>👨‍💼 Professional & Formal</option>
+                    <option value="Casual" {% if claims.get('ai_tone') == 'Casual' %}selected{% endif %}>☕ Casual & Friendly</option>
+                    <option value="Aggressive" {% if claims.get('ai_tone') == 'Aggressive' %}selected{% endif %}>🔥 Direct & Aggressive (Pushes Savings)</option>
+                    <option value="Encouraging" {% if claims.get('ai_tone') == 'Encouraging' %}selected{% endif %}>✨ Supportive & Encouraging</option>
+                </select>
+            </div>
+            <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--line) !important;">
+                <button class="btn btn-ghost border-0 text-muted" type="button" id="cancelAiModalBtn">Cancel</button>
+                <button class="btn btn-brown px-4 py-2" type="submit">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 6. Add Category Modal Backdrop (kept unchanged) -->
+<div class="modal-backdrop" id="categoryModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="categoryModalTitle" style="max-width: 480px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
+        <button class="modal-close-btn" id="closeCategoryModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-tag-fill text-success" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="categoryModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900; line-height: 1.1;">Add Category</h3>
+                <small class="text-muted" style="font-size: 0.85rem;">Create a new category</small>
+            </div>
+        </div>
+        
+        <form id="categoryForm" class="stack-form">
+            <!-- Category name -->
+            <div>
+                <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Category name</label>
+                <input type="text" name="name" class="form-control" placeholder="Category name" required id="categoryNameInput">
+            </div>
+            
+            <!-- Segmented Control or Radio Buttons for Type -->
+            <div class="mt-3">
+                <label class="form-label text-muted mb-2" style="font-size: 0.85rem;">Type</label>
+                <div class="d-flex gap-4 align-items-center">
+                    <label class="d-flex align-items-center gap-2" style="cursor: pointer; color: var(--text);">
+                        <input type="radio" name="type" value="expense" checked style="accent-color: var(--accent);"> Expense
+                    </label>
+                    <label class="d-flex align-items-center gap-2" style="cursor: pointer; color: var(--text);">
+                        <input type="radio" name="type" value="income" style="accent-color: var(--accent);"> Income
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Color Selector (16 colors grid) -->
+            <div class="mt-3">
+                <label class="form-label text-muted mb-2" style="font-size: 0.85rem;">Color</label>
+                <div class="color-grid d-flex flex-wrap gap-2" style="max-width: 360px;">
+                    <!-- Appended dynamically -->
+                </div>
+                <input type="hidden" name="color" id="selectedColorVal" value="violet">
+            </div>
+            
+            <!-- Icon Selector -->
+            <div class="mt-3">
+                <label class="form-label text-muted mb-2" style="font-size: 0.85rem;">Icon</label>
+                <div class="icon-grid d-grid gap-2 text-center" style="grid-template-columns: repeat(8, 1fr); max-height: 180px; overflow-y: auto; padding: 6px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-soft);">
+                    <!-- Appended dynamically -->
+                </div>
+                <input type="hidden" name="icon" id="selectedIconVal" value="bi-tag">
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--line) !important;">
+                <button class="btn btn-ghost border-0 text-muted" type="button" id="cancelCategoryModalBtn" style="padding: 8px 18px;">Cancel</button>
+                <button class="btn btn-brown px-4 py-2" type="submit" id="submitCategoryBtn">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Styling for settings item rows */
+    .setting-item-card {
+        background: var(--surface-soft);
+        border-color: var(--line) !important;
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .setting-item-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent) !important;
+        background: var(--surface) !important;
+    }
+    .setting-item-card .mini-icon {
+        transition: transform 0.25s ease;
+    }
+    .setting-item-card:hover .mini-icon {
+        transform: scale(1.08);
+    }
+    .setting-item-card .bi-chevron-right {
+        transition: transform 0.2s ease;
+    }
+    .setting-item-card:hover .bi-chevron-right {
+        transform: translateX(4px);
+        color: var(--accent) !important;
+    }
+
+    /* Styling for color dots */
+    .color-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    .color-dot:hover {
+        transform: scale(1.15);
+    }
+    .color-dot.active {
+        border-color: #fff !important;
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+    
+    /* Styling for icon buttons */
+    .icon-choice {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--muted);
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+    .icon-choice:hover {
+        background: var(--line);
+        color: var(--text);
+    }
+    .icon-choice.active {
+        background: var(--accent) !important;
+        color: #fff !important;
+        border-color: var(--accent) !important;
+    }
+    
+    /* Category row list item styling */
+    .category-list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface-soft);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .category-list-item:hover {
+        transform: translateY(-2px);
+        border-color: var(--muted) !important;
+    }
+</style>
+{% endblock %}

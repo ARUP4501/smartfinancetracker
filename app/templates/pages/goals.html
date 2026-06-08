@@ -1,0 +1,136 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Savings Goals | SmartFinance{% endblock %}
+{% block page_title %}Savings Goals{% endblock %}
+{% block page_subtitle %}Track your financial milestones{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-brown d-flex align-items-center gap-2" id="openAddGoalBtnTop" type="button" style="height: 40px; padding: 0 16px; font-size: 0.88rem;">
+    <i class="bi bi-plus-lg"></i> Add Goal
+</button>
+{% endblock %}
+
+{% block page_content %}
+<!-- KPI Stats Row -->
+<section class="row row-cols-1 row-cols-md-4 g-3 mb-4 mt-1">
+    <div class="col">
+        <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-blue" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
+            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Goals</small>
+            <strong id="totalGoalsVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">0</strong>
+        </div>
+    </div>
+    <div class="col">
+        <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-orange" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
+            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Target</small>
+            <strong id="totalTargetVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">₹0</strong>
+        </div>
+    </div>
+    <div class="col">
+        <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-green" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
+            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Saved So Far</small>
+            <strong id="totalSavedVal" style="font-size: 1.68rem; font-weight: 900; color: var(--green);">₹0</strong>
+        </div>
+    </div>
+    <div class="col">
+        <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-violet" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
+            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Achieved</small>
+            <strong id="totalAchievedVal" style="font-size: 1.68rem; font-weight: 900; color: var(--violet);">0</strong>
+        </div>
+    </div>
+</section>
+
+<!-- Empty State Panel -->
+<div class="panel p-5 text-center d-flex flex-column align-items-center justify-content-center border rounded-3" id="emptyGoalsState" style="min-height: 340px; background: var(--surface); border-color: var(--line) !important;">
+    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 68px; height: 68px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+        <i class="bi bi-trophy" style="font-size: 1.85rem;"></i>
+    </div>
+    <h4 class="fw-bold mb-2">No goals yet</h4>
+    <p class="text-muted mb-4" style="font-size: 0.95rem;">Set a savings target to start tracking your milestones</p>
+    <button class="btn btn-brown px-4 py-2" id="openAddGoalBtnCenter" type="button">
+        <i class="bi bi-plus-lg"></i> Create Goal
+    </button>
+</div>
+
+<!-- Goals List Panel -->
+<div class="panel border rounded-3 d-none" id="goalsListPanel" style="background: var(--surface); border-color: var(--line) !important;">
+    <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+        <h2>Active Goals</h2>
+    </div>
+    <div class="d-flex flex-column gap-3" id="goalsContainer">
+        <!-- Goals populated dynamically -->
+    </div>
+</div>
+
+<!-- Add/Edit Goal Modal Backdrop -->
+<div class="modal-backdrop" id="goalModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="goalModalTitle" style="max-width: 460px; padding: 28px;">
+        <button class="modal-close-btn" id="closeGoalModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-trophy" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="goalModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900; line-height: 1.1;">New Goal</h3>
+                <small id="goalModalSubtitle" class="text-muted" style="font-size: 0.85rem;">Set a savings milestone to aim for</small>
+            </div>
+        </div>
+
+        <form id="goalForm" class="stack-form">
+            <!-- Goal Name -->
+            <div>
+                <label class="form-label mb-1">Goal Name</label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. Buy Laptop, Europe Trip" required id="goalNameInput">
+            </div>
+
+            <!-- Target Amount -->
+            <div class="mt-3">
+                <label class="form-label mb-1">Target Amount (₹)</label>
+                <input type="number" name="target_amount" class="form-control" placeholder="100000" step="0.01" min="1" required id="goalTargetInput">
+            </div>
+
+            <!-- Current Savings -->
+            <div class="mt-3">
+                <label class="form-label mb-1">Current Savings (₹)</label>
+                <input type="number" name="current_amount" class="form-control" placeholder="0" step="0.01" min="0" id="goalCurrentInput" value="0">
+            </div>
+
+            <!-- Target Date -->
+            <div class="mt-3">
+                <label class="form-label mb-1">Target Date <span class="text-muted" style="font-size:0.8rem;">(optional)</span></label>
+                <input type="date" name="target_date" class="form-control" id="goalTargetDateInput">
+            </div>
+
+            <!-- Live Progress Preview -->
+            <div class="mt-4" id="goalProgressPreview" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.82rem;">
+                    <span style="color: var(--muted);">Progress</span>
+                    <span id="goalProgressLabel" style="font-weight: 700; color: var(--text);">0%</span>
+                </div>
+                <div class="progress" style="height: 10px; border-radius: 5px; background: var(--surface-soft);">
+                    <div id="goalProgressBar" class="progress-bar" role="progressbar" style="width: 0%; border-radius: 5px; background: var(--green); transition: width 0.4s ease;"></div>
+                </div>
+                <div id="goalProgressSubtext" class="mt-1" style="font-size: 0.78rem; color: var(--muted); text-align: right;"></div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-4 d-flex justify-content-end">
+                <button class="btn btn-brown px-4 py-2" type="submit" id="submitGoalBtn">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Goal Confirmation Modal Backdrop -->
+<div class="modal-backdrop" id="deleteGoalConfirmModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="deleteGoalModalTitle" style="max-width: 440px; padding: 24px;">
+        <h3 id="deleteGoalModalTitle" class="modal-title" style="font-size: 1.25rem; font-weight: 700;">Delete Goal</h3>
+        <p class="mt-3" style="color: var(--muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 24px;">Are you sure you want to delete this goal? This action cannot be undone.</p>
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-ghost border-0 bg-transparent text-muted" id="cancelDeleteGoalBtn" type="button" style="padding: 8px 16px;">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteGoalBtn" type="button" style="background: #ef4444; border: 0; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); color: #fff; padding: 8px 18px;">Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

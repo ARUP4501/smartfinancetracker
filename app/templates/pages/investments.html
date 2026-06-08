@@ -1,0 +1,889 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Investments | SmartFinance{% endblock %}
+{% block page_title %}Investments{% endblock %}
+{% block page_subtitle %}Track your investment portfolio{% endblock %}
+
+{% block topbar_actions %}
+<div class="d-flex align-items-center gap-2 me-2">
+    <button id="openAddModalBtn" class="btn btn-accent d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #98592b, #703c19); border: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem; height: 40px; padding: 0 16px; box-shadow: 0 4px 12px rgba(152, 89, 43, 0.25);">
+        <i class="bi bi-plus-lg"></i> Add Investment
+    </button>
+</div>
+{% endblock %}
+
+{% block page_content %}
+<style>
+    /* Investments Dashboard CSS */
+    .investments-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding-bottom: 40px;
+    }
+
+    .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .metric-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        padding: 16px 20px;
+        min-height: 106px;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--line), transparent);
+        transition: background 0.25s ease;
+    }
+
+    /* Individual Card Hover Glow Effects */
+    .metric-card-invested:hover {
+        transform: translateY(-4px);
+        border-color: #98592b;
+        box-shadow: 0 8px 24px rgba(152, 89, 43, 0.28);
+    }
+    .metric-card-invested:hover::before {
+        background: #98592b;
+    }
+
+    .metric-card-current:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+        box-shadow: 0 8px 24px rgba(124, 77, 255, 0.28);
+    }
+    .metric-card-current:hover::before {
+        background: var(--accent);
+    }
+
+    .metric-card-returns:hover {
+        transform: translateY(-4px);
+        border-color: var(--green);
+        box-shadow: 0 8px 24px rgba(0, 209, 143, 0.28);
+    }
+    .metric-card-returns:hover::before {
+        background: var(--green);
+    }
+    .metric-card-returns.neg-hover:hover {
+        border-color: var(--pink);
+        box-shadow: 0 8px 24px rgba(255, 61, 112, 0.28);
+    }
+    .metric-card-returns.neg-hover:hover::before {
+        background: var(--pink);
+    }
+
+    .metric-card-pct:hover {
+        transform: translateY(-4px);
+        border-color: var(--green);
+        box-shadow: 0 8px 24px rgba(0, 209, 143, 0.28);
+    }
+    .metric-card-pct:hover::before {
+        background: var(--green);
+    }
+    .metric-card-pct.neg-hover:hover {
+        border-color: var(--pink);
+        box-shadow: 0 8px 24px rgba(255, 61, 112, 0.28);
+    }
+    .metric-card-pct.neg-hover:hover::before {
+        background: var(--pink);
+    }
+
+    .metric-card-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .metric-card-value {
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.5px;
+        margin: 0;
+    }
+    .metric-card-value.positive { color: var(--green); }
+    .metric-card-value.negative { color: var(--pink); }
+
+    /* Portfolio Section */
+    .portfolio-panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .portfolio-panel:hover {
+        transform: translateY(-3px);
+        border-color: #98592b !important;
+        box-shadow: 0 12px 32px rgba(152, 89, 43, 0.15), var(--shadow);
+    }
+
+    .portfolio-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 16px;
+    }
+
+    .portfolio-title-group h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Filter pills */
+    .filter-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .filter-pill {
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        color: var(--text);
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .filter-pill:hover {
+        transform: translateY(-2px);
+        border-color: #98592b;
+        background: rgba(152, 89, 43, 0.12);
+        box-shadow: 0 4px 10px rgba(152, 89, 43, 0.15);
+    }
+    .filter-pill.active {
+        background: #98592b;
+        border-color: #98592b;
+        color: white;
+        box-shadow: 0 4px 12px rgba(152, 89, 43, 0.3);
+    }
+    .filter-pill.active:hover {
+        background: #a86838;
+        border-color: #a86838;
+        box-shadow: 0 6px 16px rgba(152, 89, 43, 0.4);
+    }
+
+    /* Add/Empty Button Hover Highlights */
+    #emptyAddBtn, #openAddModalBtn {
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease, box-shadow 0.25s ease !important;
+    }
+    #emptyAddBtn:hover {
+        transform: translateY(-3px) !important;
+        background: #a86838 !important;
+        box-shadow: 0 8px 20px rgba(152, 89, 43, 0.38) !important;
+    }
+    #emptyAddBtn:active {
+        transform: translateY(0) scale(0.97) !important;
+    }
+
+    #openAddModalBtn:hover {
+        transform: translateY(-3px) !important;
+        background: linear-gradient(135deg, #a86838, #804c25) !important;
+        box-shadow: 0 8px 20px rgba(152, 89, 43, 0.38) !important;
+    }
+    #openAddModalBtn:active {
+        transform: translateY(0) scale(0.97) !important;
+    }
+
+    /* Table styles */
+    .investment-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .investment-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .investment-table th {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 16px;
+        border-bottom: 2px solid var(--line);
+    }
+
+    .investment-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.88rem;
+        vertical-align: middle;
+    }
+
+    .investment-row {
+        transition: background-color 0.2s;
+    }
+    .investment-row:hover {
+        background-color: var(--surface-soft);
+    }
+
+    .inv-name-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .inv-name {
+        font-weight: 700;
+        color: var(--text);
+    }
+    .inv-type {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--muted);
+        background: var(--surface-soft);
+        padding: 2px 8px;
+        border-radius: 10px;
+        width: fit-content;
+        margin-top: 4px;
+        border: 1px solid var(--line);
+    }
+
+    .inv-value {
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .inv-returns {
+        font-weight: 700;
+    }
+    .inv-returns.positive { color: var(--green); }
+    .inv-returns.negative { color: var(--pink); }
+
+    .inv-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .investment-row:hover .inv-actions {
+        opacity: 1;
+    }
+
+    .inv-action-btn {
+        background: none;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .inv-action-btn:hover {
+        color: var(--text);
+        background: var(--surface-soft);
+        border-color: var(--muted);
+    }
+    .inv-action-btn.del-btn:hover {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+        border-color: #ff6b6b;
+    }
+
+    /* Empty state */
+    .empty-investments {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--muted);
+    }
+    .empty-investments > i {
+        font-size: 3.5rem;
+        opacity: 0.2;
+        margin-bottom: 16px;
+    }
+    .empty-investments h4 {
+        color: var(--text);
+        font-weight: 700;
+        margin: 0 0 8px 0;
+    }
+    .empty-investments p {
+        font-size: 0.9rem;
+        max-width: 340px;
+        margin: 0 auto 24px auto;
+        line-height: 1.5;
+    }
+
+    /* Modal Form Custom Design */
+    .custom-modal-backdrop {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(7, 17, 31, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 1050;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+    .custom-modal-card {
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 520px;
+        box-shadow: var(--shadow);
+        transform: scale(0.92);
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        overflow: hidden;
+    }
+    .custom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--line);
+    }
+    .custom-modal-header h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--text);
+    }
+    .custom-modal-close {
+        background: none; border: none; color: var(--muted);
+        font-size: 1.2rem; cursor: pointer; transition: color 0.2s;
+    }
+    .custom-modal-close:hover { color: var(--text); }
+
+    .custom-modal-body {
+        padding: 24px;
+        max-height: 75vh;
+        overflow-y: auto;
+    }
+
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-group-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 18px;
+    }
+    .form-group-custom label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--muted);
+    }
+    .form-control-custom {
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: var(--text);
+        font-size: 0.88rem;
+        transition: all 0.2s;
+    }
+    .form-control-custom option {
+        background-color: #0c1b32;
+        color: #f8fbff;
+    }
+    [data-theme="light"] .form-control-custom option {
+        background-color: #ffffff;
+        color: #111a35;
+    }
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #98592b;
+        box-shadow: 0 0 0 3px rgba(152, 89, 43, 0.15);
+    }
+    .form-control-custom::placeholder {
+        color: var(--faint);
+    }
+
+    .btn-submit-custom {
+        background: #98592b;
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(152, 89, 43, 0.2);
+    }
+    .btn-submit-custom:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(152, 89, 43, 0.3);
+        background: #a86838;
+    }
+
+    @media (max-width: 576px) {
+        .form-grid-2 {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+</style>
+
+<div class="investments-container">
+    <!-- Summary Cards -->
+    <div class="metrics-row">
+        <div class="metric-card metric-card-invested">
+            <span class="metric-card-label">Invested</span>
+            <p id="totalInvestedVal" class="metric-card-value">₹0</p>
+        </div>
+        <div class="metric-card metric-card-current">
+            <span class="metric-card-label">Current Value</span>
+            <p id="totalCurrentVal" class="metric-card-value">₹0</p>
+        </div>
+        <div id="returnsCard" class="metric-card metric-card-returns">
+            <span class="metric-card-label">Returns</span>
+            <p id="totalReturnsVal" class="metric-card-value">+₹0</p>
+        </div>
+        <div id="pctCard" class="metric-card metric-card-pct">
+            <span class="metric-card-label">Returns %</span>
+            <p id="returnsPctVal" class="metric-card-value">+0%</p>
+        </div>
+    </div>
+
+    <!-- Holdings Section -->
+    <div class="portfolio-panel">
+        <div class="portfolio-header">
+            <div class="portfolio-title-group">
+                <h3 id="holdingsTitle">Holdings (0)</h3>
+            </div>
+            
+            <div class="filter-pills" id="filterContainer">
+                <span class="filter-pill active" data-filter="All">All</span>
+                <span class="filter-pill" data-filter="MF">MF</span>
+                <span class="filter-pill" data-filter="Stocks">Stocks</span>
+                <span class="filter-pill" data-filter="SIP">SIP</span>
+                <span class="filter-pill" data-filter="FD">FD</span>
+                <span class="filter-pill" data-filter="PPF">PPF</span>
+                <span class="filter-pill" data-filter="NPS">NPS</span>
+                <span class="filter-pill" data-filter="Gold">Gold</span>
+                <span class="filter-pill" data-filter="Other">Other</span>
+            </div>
+        </div>
+
+        <div class="investment-table-wrapper">
+            <table class="investment-table" id="investmentsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Invested</th>
+                        <th>Current</th>
+                        <th>Returns</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="investmentsList">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div class="empty-investments" id="emptyState" style="display: none;">
+                <i class="bi bi-graph-up"></i>
+                <h4>No investments yet</h4>
+                <p>Add manually to track your investment portfolio</p>
+                <button id="emptyAddBtn" class="btn btn-accent" style="background: #98592b; border: none; border-radius: 20px; font-weight: 600; padding: 6px 18px; font-size: 0.76rem; box-shadow: 0 4px 12px rgba(152, 89, 43, 0.25);">
+                    <i class="bi bi-plus-lg me-1"></i> Add Investment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Investment Custom Modal -->
+<div class="custom-modal-backdrop" id="investmentModal" style="display: none;">
+    <div class="custom-modal-card">
+        <div class="custom-modal-header">
+            <h4 id="modalTitle">Add Stocks</h4>
+            <button class="custom-modal-close" id="closeModalBtn"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="custom-modal-body">
+            <form id="investmentForm">
+                <input type="hidden" id="editInvId">
+                
+                <div class="form-group-custom">
+                    <label for="invName">Name *</label>
+                    <input type="text" id="invName" class="form-control-custom" placeholder="e.g., HDFC Equity Fund" required>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="invType">Type *</label>
+                    <select id="invType" class="form-control-custom" required>
+                        <option value="Stocks">Stocks</option>
+                        <option value="MF">Mutual Funds (MF)</option>
+                        <option value="SIP">SIP</option>
+                        <option value="FD">Fixed Deposit (FD)</option>
+                        <option value="PPF">PPF</option>
+                        <option value="NPS">NPS</option>
+                        <option value="Gold">Gold</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group-custom">
+                        <label for="invInvested">Invested Amount *</label>
+                        <input type="number" step="any" id="invInvested" class="form-control-custom" placeholder="100000" required>
+                    </div>
+                    <div class="form-group-custom">
+                        <label for="invCurrent">Current Value *</label>
+                        <input type="number" step="any" id="invCurrent" class="form-control-custom" placeholder="120000" required>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group-custom">
+                        <label for="invPurchaseDate">Purchase Date *</label>
+                        <input type="date" id="invPurchaseDate" class="form-control-custom" required>
+                    </div>
+                    <div class="form-group-custom">
+                        <label for="invUnits">Units</label>
+                        <input type="number" step="any" id="invUnits" class="form-control-custom" placeholder="100">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group-custom">
+                        <label for="invMaturityDate">Maturity Date</label>
+                        <input type="date" id="invMaturityDate" class="form-control-custom">
+                    </div>
+                    <div class="form-group-custom">
+                        <label for="invInterest">Interest Rate (%)</label>
+                        <input type="number" step="any" id="invInterest" class="form-control-custom" placeholder="7.5">
+                    </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="invNotes">Notes</label>
+                    <textarea id="invNotes" class="form-control-custom" placeholder="Any notes..." rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-custom" id="submitBtn">Add Investment</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    let allInvestments = [];
+    let activeFilter = "All";
+
+    // Selectors
+    const listTable = document.getElementById("investmentsTable");
+    const listBody = document.getElementById("investmentsList");
+    const emptyState = document.getElementById("emptyState");
+    const holdingsTitle = document.getElementById("holdingsTitle");
+    
+    // Summary components
+    const totalInvestedEl = document.getElementById("totalInvestedVal");
+    const totalCurrentEl = document.getElementById("totalCurrentVal");
+    const totalReturnsEl = document.getElementById("totalReturnsVal");
+    const returnsPctEl = document.getElementById("returnsPctVal");
+
+    // Modal elements
+    const modal = document.getElementById("investmentModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const form = document.getElementById("investmentForm");
+    const editIdInput = document.getElementById("editInvId");
+    const nameInput = document.getElementById("invName");
+    const typeSelect = document.getElementById("invType");
+    const investedInput = document.getElementById("invInvested");
+    const currentInput = document.getElementById("invCurrent");
+    const purchaseDateInput = document.getElementById("invPurchaseDate");
+    const unitsInput = document.getElementById("invUnits");
+    const maturityDateInput = document.getElementById("invMaturityDate");
+    const interestInput = document.getElementById("invInterest");
+    const notesInput = document.getElementById("invNotes");
+    const submitBtn = document.getElementById("submitBtn");
+
+    // Date setting
+    const today = new Date().toISOString().split('T')[0];
+    purchaseDateInput.value = today;
+
+    // Type Change Listener for Modal Title
+    typeSelect.addEventListener("change", () => {
+        const type = typeSelect.value;
+        const isEdit = !!editIdInput.value;
+        const actionPrefix = isEdit ? "Edit" : "Add";
+        if (type === "Stocks") {
+            modalTitle.textContent = `${actionPrefix} Stocks`;
+        } else if (type === "MF") {
+            modalTitle.textContent = `${actionPrefix} Mutual Fund`;
+        } else {
+            modalTitle.textContent = `${actionPrefix} ${type} Investment`;
+        }
+    });
+
+    // Modal Control functions
+    const openModal = (editData = null) => {
+        form.reset();
+        purchaseDateInput.value = today;
+        
+        if (editData) {
+            editIdInput.value = editData._id;
+            nameInput.value = editData.name;
+            typeSelect.value = editData.type;
+            investedInput.value = editData.invested_amount;
+            currentInput.value = editData.current_value;
+            purchaseDateInput.value = editData.purchase_date ? editData.purchase_date.split('T')[0] : "";
+            unitsInput.value = editData.units || "";
+            maturityDateInput.value = editData.maturity_date ? editData.maturity_date.split('T')[0] : "";
+            interestInput.value = editData.interest_rate || "";
+            notesInput.value = editData.notes || "";
+            
+            submitBtn.textContent = "Save Changes";
+            const typeText = editData.type === "Stocks" ? "Stocks" : editData.type === "MF" ? "Mutual Fund" : editData.type;
+            modalTitle.textContent = `Edit ${typeText}`;
+        } else {
+            editIdInput.value = "";
+            submitBtn.textContent = "Add Investment";
+            modalTitle.textContent = "Add Stocks"; // Default type select is Stocks
+        }
+
+        modal.style.display = "flex";
+        setTimeout(() => {
+            modal.style.opacity = "1";
+            modal.querySelector(".custom-modal-card").style.transform = "scale(1)";
+        }, 10);
+    };
+
+    const closeModal = () => {
+        modal.style.opacity = "0";
+        modal.querySelector(".custom-modal-card").style.transform = "scale(0.92)";
+        setTimeout(() => {
+            modal.style.display = "none";
+        }, 250);
+    };
+
+    // Event hooks
+    document.getElementById("openAddModalBtn").addEventListener("click", () => openModal());
+    document.getElementById("emptyAddBtn").addEventListener("click", () => openModal());
+    document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+    // Formatting money
+    const formatMoney = (val) => {
+        return "₹" + Number(val || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+    };
+
+    // Render logic
+    const render = () => {
+        const filtered = allInvestments.filter(item => {
+            if (activeFilter === "All") return true;
+            return item.type === activeFilter;
+        });
+
+        holdingsTitle.textContent = `Holdings (${filtered.length})`;
+
+        if (filtered.length === 0) {
+            listTable.style.display = "none";
+            emptyState.style.display = "flex";
+        } else {
+            emptyState.style.display = "none";
+            listTable.style.display = "table";
+            
+            listBody.innerHTML = filtered.map(item => {
+                const invested = parseFloat(item.invested_amount || 0);
+                const current = parseFloat(item.current_value || 0);
+                const diff = current - invested;
+                const sign = diff >= 0 ? "+" : "";
+                const pct = invested > 0 ? ((diff / invested) * 100).toFixed(2) : "0.00";
+                const colorClass = diff >= 0 ? "positive" : "negative";
+                const badgeType = item.type === "MF" ? "Mutual Fund" : item.type;
+
+                return `<tr class="investment-row" data-id="${item._id}">
+                    <td>
+                        <div class="inv-name-group">
+                            <span class="inv-name">${item.name}</span>
+                            <span class="inv-type">${badgeType}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="inv-value">${formatMoney(invested)}</span>
+                    </td>
+                    <td>
+                        <span class="inv-value">${formatMoney(current)}</span>
+                    </td>
+                    <td>
+                        <span class="inv-returns ${colorClass}">${sign}${formatMoney(diff)} (${sign}${pct}%)</span>
+                    </td>
+                    <td>
+                        <div class="inv-actions">
+                            <button class="inv-action-btn edit-btn" data-id="${item._id}"><i class="bi bi-pencil"></i></button>
+                            <button class="inv-action-btn del-btn" data-id="${item._id}"><i class="bi bi-trash3"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join("");
+
+            // Setup buttons event listeners inside table
+            listBody.querySelectorAll(".edit-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const item = allInvestments.find(x => x._id === btn.dataset.id);
+                    if (item) openModal(item);
+                });
+            });
+
+            listBody.querySelectorAll(".del-btn").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    if (confirm("Are you sure you want to delete this investment?")) {
+                        try {
+                            const res = await fetch(`/api/investments/${btn.dataset.id}`, { method: "DELETE" });
+                            if (res.ok) {
+                                toast("Investment deleted successfully");
+                                loadData();
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                });
+            });
+        }
+    };
+
+    // Load Data
+    const loadData = async () => {
+        try {
+            const res = await fetch("/api/investments/");
+            const payload = await res.json();
+            if (payload.success) {
+                allInvestments = payload.data.items || [];
+                
+                // Set summaries
+                const sum = payload.data.summary;
+                totalInvestedEl.textContent = formatMoney(sum.total_invested);
+                totalCurrentEl.textContent = formatMoney(sum.total_current);
+                
+                const sign = sum.total_returns >= 0 ? "+" : "";
+                totalReturnsEl.textContent = `${sign}${formatMoney(sum.total_returns)}`;
+                totalReturnsEl.className = `metric-card-value ${sum.total_returns >= 0 ? 'positive' : 'negative'}`;
+                
+                returnsPctEl.textContent = `${sign}${sum.returns_pct}%`;
+                returnsPctEl.className = `metric-card-value ${sum.total_returns >= 0 ? 'positive' : 'negative'}`;
+
+                // Update hover classes dynamically
+                const returnsCard = document.getElementById("returnsCard");
+                const pctCard = document.getElementById("pctCard");
+                if (returnsCard && pctCard) {
+                    if (sum.total_returns >= 0) {
+                        returnsCard.classList.remove("neg-hover");
+                        pctCard.classList.remove("neg-hover");
+                    } else {
+                        returnsCard.classList.add("neg-hover");
+                        pctCard.classList.add("neg-hover");
+                    }
+                }
+
+                render();
+            }
+        } catch (err) {
+            console.error("Error fetching investments:", err);
+        }
+    };
+
+    // Filter Navigation
+    document.querySelectorAll(".filter-pill").forEach(pill => {
+        pill.addEventListener("click", () => {
+            document.querySelectorAll(".filter-pill").forEach(x => x.classList.remove("active"));
+            pill.classList.add("active");
+            activeFilter = pill.dataset.filter;
+            render();
+        });
+    });
+
+    // Form Submission
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const payload = {
+            name: nameInput.value,
+            type: typeSelect.value,
+            invested_amount: parseFloat(investedInput.value),
+            current_value: parseFloat(currentInput.value),
+            purchase_date: purchaseDateInput.value || null,
+            units: unitsInput.value ? parseFloat(unitsInput.value) : null,
+            maturity_date: maturityDateInput.value || null,
+            interest_rate: interestInput.value ? parseFloat(interestInput.value) : null,
+            notes: notesInput.value
+        };
+
+        const id = editIdInput.value;
+        const method = id ? "PUT" : "POST";
+        const url = id ? `/api/investments/${id}` : "/api/investments/";
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                toast(id ? "Investment updated successfully" : "Investment added successfully");
+                closeModal();
+                loadData();
+            } else {
+                const data = await res.json();
+                alert(data.message || "Something went wrong");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Connection error");
+        }
+    });
+
+
+
+    // Initial load
+    loadData();
+});
+</script>
+{% endblock %}

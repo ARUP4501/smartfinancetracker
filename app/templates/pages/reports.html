@@ -1,0 +1,301 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Reports | SmartFinance{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block page_subtitle %}Generate and export financial statements{% endblock %}
+
+{% block page_content %}
+<style>
+    /* Styling for Table Header */
+    .app-table thead th {
+        background-color: var(--surface-soft);
+        border-bottom: 2px solid var(--line);
+        color: var(--text);
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 16px 20px;
+    }
+
+    /* Table rows formatting */
+    .app-table tbody td {
+        padding: 16px 20px;
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .app-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .app-table tbody tr:hover {
+        background-color: var(--surface-soft);
+    }
+
+    /* Badges and Chips */
+    .badge-income {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: rgba(0, 209, 143, 0.1);
+        color: var(--green);
+        border: 1px solid rgba(0, 209, 143, 0.2);
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .badge-income::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background-color: var(--green);
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .badge-expense {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: rgba(255, 61, 112, 0.1);
+        color: var(--pink);
+        border: 1px solid rgba(255, 61, 112, 0.2);
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .badge-expense::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background-color: var(--pink);
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .chip-category {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        background: var(--surface-soft);
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    /* Amount styling */
+    .text-amount-income {
+        color: var(--green) !important;
+        font-weight: 700;
+    }
+
+    .text-amount-expense {
+        color: var(--pink) !important;
+        font-weight: 700;
+    }
+
+    /* Custom layout enhancements */
+    .reports-filter-panel {
+        background: var(--surface);
+        border-color: var(--line) !important;
+        border-radius: var(--radius-lg);
+    }
+
+    .reports-preview-panel {
+        background: var(--surface);
+        border-color: var(--line) !important;
+        border-radius: var(--radius-lg);
+    }
+
+    /* Search bar design */
+    .search-box-wrap .search-pill {
+        width: 280px;
+        height: 40px;
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        color: var(--muted);
+    }
+
+    .search-box-wrap .search-pill input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        font-size: 0.85rem;
+    }
+
+    /* Print layout */
+    @media print {
+        body {
+            background: white !important;
+            color: black !important;
+        }
+        .app-shell {
+            display: block !important;
+        }
+        .sidebar, .topbar, .reports-filter-panel, #reportSearchWrap, #reportEmptyState, #reportNoDataState, .d-flex.gap-2, [data-export], button {
+            display: none !important;
+        }
+        .main-area {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .reports-preview-panel {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+        #reportDataTable {
+            display: table !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        .app-table thead th {
+            background-color: #f1f5f9 !important;
+            color: #000 !important;
+            border-bottom: 2px solid #cbd5e1 !important;
+        }
+        .app-table tbody td {
+            border-bottom: 1px solid #e2e8f0 !important;
+            color: #000 !important;
+        }
+        .badge-income, .badge-expense {
+            border: 1px solid #94a3b8 !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        .badge-income::before, .badge-expense::before {
+            background-color: #000 !important;
+        }
+        .chip-category {
+            border: 1px solid #cbd5e1 !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        .text-amount-income {
+            color: #16a34a !important;
+        }
+        .text-amount-expense {
+            color: #dc2626 !important;
+        }
+    }
+</style>
+
+<div class="row g-4">
+    <!-- Filter Panel -->
+    <div class="col-12">
+        <section class="panel reports-filter-panel p-4">
+            <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-sliders text-accent" style="font-size: 1.25rem;"></i>
+                    <h2 class="mb-0">Report Criteria</h2>
+                </div>
+            </div>
+            
+            <form id="reportForm" class="row g-3 align-items-end">
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label text-muted fw-bold small mb-2"><i class="bi bi-tag-fill me-1"></i> Transaction Type</label>
+                    <select name="type" class="form-select">
+                        <option value="all">All Transactions</option>
+                        <option value="income">Income Only</option>
+                        <option value="expense">Expense Only</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label text-muted fw-bold small mb-2"><i class="bi bi-calendar-range me-1"></i> Start Date</label>
+                    <input name="start_date" class="form-control" type="date">
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label text-muted fw-bold small mb-2"><i class="bi bi-calendar-range-fill me-1"></i> End Date</label>
+                    <input name="end_date" class="form-control" type="date">
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="d-flex gap-2 w-100 justify-content-xl-end">
+                        <button class="btn btn-accent px-3 py-2 flex-grow-1 flex-xl-grow-0" type="submit">
+                            <i class="bi bi-eye me-1"></i> Preview
+                        </button>
+                        <button class="btn btn-glass px-2 py-2" data-export="pdf" type="button" title="Export to PDF">
+                            <i class="bi bi-filetype-pdf text-danger" style="font-size: 1.15rem;"></i>
+                        </button>
+                        <button class="btn btn-glass px-2 py-2" data-export="excel" type="button" title="Export to Excel">
+                            <i class="bi bi-filetype-xls text-success" style="font-size: 1.15rem;"></i>
+                        </button>
+                        <button class="btn btn-glass px-2 py-2" id="printReportBtn" type="button" title="Print Statement">
+                            <i class="bi bi-printer text-info" style="font-size: 1.15rem;"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="col-12">
+        <section class="panel reports-preview-panel p-4">
+            <div class="panel-head d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                <div>
+                    <h2 class="mb-1" id="reportPreviewTitle">Statement Ledger</h2>
+                    <small class="text-muted" id="reportPreviewSubtitle">Run report filters above to populate.</small>
+                </div>
+                <div class="search-box-wrap d-none" id="reportSearchWrap">
+                    <label class="search-pill mb-0">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="reportSearch" placeholder="Search transactions...">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Welcome/Empty State -->
+            <div id="reportEmptyState" class="text-center py-5">
+                <div class="d-flex align-items-center justify-content-center mb-3 mx-auto" style="width: 72px; height: 72px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                    <i class="bi bi-file-earmark-bar-graph" style="font-size: 2rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Generate Financial Report</h4>
+                <p class="text-muted mb-0 mx-auto" style="max-width: 400px; font-size: 0.92rem;">Select your parameters above and click "Preview" to load your transaction ledger.</p>
+            </div>
+
+            <!-- No Data State -->
+            <div id="reportNoDataState" class="text-center py-5 d-none">
+                <div class="d-flex align-items-center justify-content-center mb-3 mx-auto" style="width: 72px; height: 72px; border-radius: 50%; background: rgba(255, 61, 112, 0.1); color: var(--pink); border: 1px solid rgba(255, 61, 112, 0.2);">
+                    <i class="bi bi-exclamation-circle" style="font-size: 2rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-2">No Transactions Found</h4>
+                <p class="text-muted mb-0 mx-auto" style="max-width: 400px; font-size: 0.92rem;">We couldn't find any transactions matching the selected criteria.</p>
+            </div>
+
+            <!-- Data Table -->
+            <div class="table-responsive">
+                <table class="table app-table align-middle text-nowrap" id="reportDataTable" style="display: none; border-collapse: collapse; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-calendar3 me-1"></i> Date</th>
+                            <th><i class="bi bi-info-circle me-1"></i> Type</th>
+                            <th><i class="bi bi-tag me-1"></i> Category</th>
+                            <th><i class="bi bi-justify-left me-1"></i> Description</th>
+                            <th class="text-end"><i class="bi bi-currency-rupee me-1"></i> Amount</th>
+                            <th class="text-end"><i class="bi bi-wallet2 me-1"></i> Balance After</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        <!-- Populated via Javascript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

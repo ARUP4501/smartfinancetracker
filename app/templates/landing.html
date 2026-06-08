@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}SmartFinance | Premium Wealth Tracking & AI Financial Intelligence{% endblock %}
+{% block body %}
+<main class="landing-shell">
+    <nav class="navbar navbar-expand-lg landing-nav">
+        <div class="container">
+            <a class="navbar-brand brand-mark" href="/">SmartFinance</a>
+            <div class="ms-auto d-flex gap-2">
+                <a class="btn btn-ghost" href="{{ url_for('web.login_page') }}">Login</a>
+                <a class="btn btn-accent" href="{{ url_for('web.register_page') }}">Start Free</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-fintech">
+        <img src="{{ url_for('static', filename='img/fintech-hero.png') }}" alt="SmartFinance dashboard preview"
+            class="hero-image">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <p class="eyebrow">Automated wealth intelligence</p>
+            <h1>Take Control of Your Financial Future</h1>
+            <p class="hero-copy">Track income, set automated budgets, monitor long-term goals, and unlock personalized
+                AI insights from one sleek, unified dashboard.</p>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="{{ url_for('web.register_page') }}" class="btn btn-accent btn-lg">Create Free Account</a>
+                <a href="#features" class="btn btn-glass btn-lg">Explore Features</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="container section-grid" id="features">
+        <div class="section-heading">
+            <p class="eyebrow">Platform Capabilities</p>
+            <h2>Everything you need to optimize your cash flow</h2>
+        </div>
+        {% set features = [
+        ("bi-piggy-bank", "Smart Savings Goals", "Establish custom financial targets, allocate funds, track progress
+        dynamically, and calculate target dates automatically."),
+        ("bi-receipt", "Instant Transaction Parser", "Copy and paste bank alerts, billing notifications, or digital
+        receipts to parse and log entries instantly."),
+        ("bi-pie-chart", "Intuitive Budget Planning", "Set monthly spend limits per category, track utilization rates,
+        and receive custom threshold alerts."),
+        ("bi-graph-up-arrow", "AI Financial Advisory", "Gain proactive insights on savings opportunities, risk
+        detections, and predictive category recommendations."),
+        ("bi-file-earmark-spreadsheet", "Professional Reporting", "Generate and download comprehensive PDF statements,
+        annual income-expense balance sheets, or CSV data."),
+        ("bi-speedometer2", "Unified Net Worth Dashboard", "Monitor cash flow, monthly savings percentages, account
+        balances, and goal progress in real-time.")
+        ] %}
+        <div class="row g-4">
+            {% for icon, title, text in features %}
+            <div class="col-md-6 col-xl-4">
+                <article class="feature-tile reveal">
+                    <i class="bi {{ icon }}"
+                        style="transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;"></i>
+                    <h3>{{ title }}</h3>
+                    <p>{{ text }}</p>
+                </article>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="stats-band">
+        <div class="container">
+            <div class="row g-4 text-center">
+                <div class="col-6 col-lg-3"><strong data-count="99.9">0</strong><span>% Uptime</span></div>
+                <div class="col-6 col-lg-3"><strong data-count="15">0</strong><span>k+ Active Members</span></div>
+                <div class="col-6 col-lg-3"><strong data-count="2.5">0</strong><span>M+ Tracked Transactions</span>
+                </div>
+                <div class="col-6 col-lg-3"><strong data-count="100">0</strong><span>% Secure & Private</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container landing-columns">
+        <div>
+            <p class="eyebrow">User Testimonials</p>
+            <h2>Designed to simplify personal wealth management</h2>
+            <blockquote>“SmartFinance completely transformed how I manage my budget. The AI insights helped me trim
+                unnecessary subscription costs and increase my monthly savings rate by 15%.”</blockquote>
+            <p class="text-muted" style="font-size: 0.9rem; margin-top: -12px;">— Arup K., Senior Product Lead</p>
+        </div>
+        <div class="faq-list">
+            <details open>
+                <summary>How secure is my financial data?</summary>
+                <p>We employ secure encryption and strict session protection. Your transaction history and personal data
+                    are stored privately and never shared with third parties.</p>
+            </details>
+            <details>
+                <summary>Can I export my financial reports?</summary>
+                <p>Yes. You can generate custom PDF summaries or export raw transaction tables as CSV files at any time
+                    from your reports dashboard.</p>
+            </details>
+            <details>
+                <summary>How does the AI assistant help me save money?</summary>
+                <p>Our built-in AI assistant analyzes your income and spending patterns to suggest personalized savings strategies, flag unusual expenses, and help you reach your goals faster.</p>
+            </details>
+            <details>
+                <summary>Can I customize my expense categories?</summary>
+                <p>Yes, you can easily create, rename, and assign budgets to custom expense categories to perfectly match your personal spending and saving habits.</p>
+            </details>
+        </div>
+    </section>
+
+    <footer class="landing-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-3">
+            <span>© 2026 SmartFinance Inc. All rights reserved.</span>
+            <a href="mailto:support@smartfinance.com">support@smartfinance.com</a>
+        </div>
+    </footer>
+</main>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block body %}
+<script>
+    window.currencySymbol = "{{ claims.get('currency', '₹') }}";
+    window.defaultWallet = "{{ claims.get('default_wallet', 'Default') }}";
+</script>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a class="brand-mark" href="{{ url_for('web.dashboard') }}" aria-label="SmartFinance home">
+                <span class="brand-logo"><i class="bi bi-cash-coin"></i></span>
+                <span class="brand-text">
+                    <strong><span>Smart</span>Finance</strong>
+                    <small>Manage • Track • Grow</small>
+                </span>
+            </a>
+
+        </div>
+        <nav class="sidebar-nav" aria-label="Primary navigation">
+            <a class="{{ 'active' if request.path == url_for('web.dashboard') else '' }}" href="{{ url_for('web.dashboard') }}"><i class="bi bi-house-door"></i><span>Dashboard</span></a>
+            <a class="{{ 'active' if request.path == url_for('web.transactions_page') else '' }}" href="{{ url_for('web.transactions_page') }}"><i class="bi bi-card-checklist"></i><span>Transactions</span></a>
+            <a class="{{ 'active' if request.path == url_for('web.budgets_page') else '' }}" href="{{ url_for('web.budgets_page') }}"><i class="bi bi-wallet2"></i><span>Budgets</span></a>
+            <a class="{{ 'active' if request.path == url_for('web.goals_page') else '' }}" href="{{ url_for('web.goals_page') }}"><i class="bi bi-bullseye"></i><span>Goals</span></a>
+            <a class="{{ 'active' if request.path == url_for('web.investments_page') else '' }}" href="{{ url_for('web.investments_page') }}"><i class="bi bi-graph-up-arrow"></i><span>Investments</span></a>
+            <a class="{{ 'active' if request.path == url_for('web.analytics_page') else '' }}" href="{{ url_for('web.analytics_page') }}"><i class="bi bi-bar-chart"></i><span>Analytics</span></a>
+            <a class="{{ 'active' if request.path == url_for('web.reports_page') else '' }}" href="{{ url_for('web.reports_page') }}"><i class="bi bi-file-earmark-text"></i><span>Reports</span></a>
+            <a class="{{ 'active' if request.path == url_for('web.insights_page') else '' }}" href="{{ url_for('web.insights_page') }}"><i class="bi bi-stars"></i><span>AI Insights</span><em>New</em></a>
+            <a class="{{ 'active' if request.path == url_for('web.settings_page') else '' }}" href="{{ url_for('web.settings_page') }}"><i class="bi bi-gear"></i><span>Settings</span></a>
+            {% if claims.get('is_admin') %}
+            <a href="{{ url_for('web.admin_dashboard') }}"><i class="bi bi-shield-lock"></i><span>Admin Portal</span></a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn btn-pro w-100" type="button">
+                <i class="bi bi-stars"></i> <span>Upgrade to Pro</span>
+            </button>
+            <a class="sidebar-footer-link logout-link" data-logout href="javascript:void(0)">
+                <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+            </a>
+            <a class="sidebar-footer-link chat-link" href="/chat">
+                <i class="bi bi-chat-left-text"></i> <span>Chat with Creator</span>
+            </a>
+        </div>
+    </aside>
+    <section class="main-area">
+        <header class="topbar">
+            <div class="topbar-left-group">
+                <button class="icon-button mobile-menu" type="button" aria-label="Menu"><i class="bi bi-list"></i></button>
+                <button class="icon-button sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle Sidebar"><i class="bi bi-text-left"></i></button>
+                <div class="page-heading">
+                    <p class="greeting mb-1" id="timeGreeting">Good Morning, <span>👋</span></p>
+                    <h1 id="pageTitle">{% block page_title %}{% endblock %}</h1>
+                    <small>{% block page_subtitle %}Here's what's happening with your finances today.{% endblock %}</small>
+                </div>
+            </div>
+            <div class="top-actions">
+                <label class="search-pill" aria-label="Search">
+                    <i class="bi bi-search"></i>
+                    <input type="search" id="globalSearch" placeholder="Search anything...">
+                    <kbd>⌘K</kbd>
+                </label>
+                <button class="icon-button" id="themeToggle" aria-label="Theme"><i class="bi bi-moon-stars"></i></button>
+                <div class="dropdown">
+                    <button class="icon-button position-relative" id="notificationBellBtn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                        <i class="bi bi-bell"></i>
+                        <span id="notificationCount" class="notify-dot d-none">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end notification-menu" id="notificationMenu">
+                        <div class="notification-header">
+                            <h6>Notifications</h6>
+                            <button id="markAllReadBtn" class="btn btn-link btn-sm p-0 text-decoration-none" style="font-size: 0.75rem; color: var(--accent);">Mark all read</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="profile-trigger" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Open profile">
+                        <span class="avatar top-avatar avatar--{{ claims.get('avatar', 'sunset') }}" data-profile-avatar>{{ (claims.name or 'U')[:1] }}</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end profile-menu">
+                        <div class="profile-summary">
+                            <span class="avatar profile-avatar-large avatar--{{ claims.get('avatar', 'sunset') }}" data-profile-avatar>{{ (claims.name or 'U')[:1] }}</span>
+                            <div>
+                                <strong data-profile-name>{{ claims.name }}</strong>
+                                <small data-profile-email>{{ claims.email }}</small>
+                                <em data-profile-role>{{ 'Admin' if claims.get('is_admin') else 'User' }}</em>
+                            </div>
+                        </div>
+                        <div class="profile-edit">
+                            <label for="profileNameInput">Display name</label>
+                            <div class="profile-name-row">
+                                <input id="profileNameInput" class="form-control form-control-sm" value="{{ claims.name }}" maxlength="60">
+                                <button class="btn btn-sm btn-accent" type="button" id="saveProfileName">Save</button>
+                            </div>
+                        </div>
+                        <div class="avatar-picker" aria-label="Choose avatar color">
+                            {% for avatar in ['sunset', 'ocean', 'forest', 'violet', 'rose', 'gold'] %}
+                            <button type="button" class="avatar-choice avatar--{{ avatar }}" data-avatar-choice="{{ avatar }}" aria-label="{{ avatar }} avatar"></button>
+                            {% endfor %}
+                        </div>
+                        {% if claims.get('is_admin') %}
+                        <a class="btn btn-ghost w-100 text-start d-flex align-items-center gap-2 mb-2" href="{{ url_for('web.admin_dashboard') }}"><i class="bi bi-shield-lock"></i> Admin Portal</a>
+                        {% endif %}
+                        <button class="btn btn-ghost w-100" type="button" data-logout><i class="bi bi-box-arrow-right"></i> Logout</button>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% block topbar_actions %}{% endblock %}
+                    <div class="dropdown date-dropdown">
+                        <button class="date-pill" id="dashboardDateRange" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" type="button">
+                            <i class="bi bi-calendar3"></i><span>Loading month...</span><i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end calendar-dropdown-menu">
+                            <div class="calendar-panel-inline" id="topCalendar">
+                                <div class="calendar-head">
+                                    <button class="calendar-nav" type="button" data-calendar-prev aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
+                                    <strong data-calendar-title>Calendar</strong>
+                                    <button class="calendar-nav" type="button" data-calendar-next aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
+                                </div>
+                                <div class="calendar-grid" data-calendar-grid></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        {% block page_content %}{% endblock %}
+    </section>
+</div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastHost"></div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <a class="brand-mark" href="{{ url_for('web.admin_dashboard') }}" aria-label="SmartFinance Admin">
+                <span class="brand-logo"><i class="bi bi-cash-coin"></i></span>
+                <span class="brand-text" style="display: flex; flex-direction: column;">
+                    <strong style="background: linear-gradient(135deg, #22d3ee, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"><span>Smart</span>Finance</strong>
+                    <small style="font-size: 0.7rem; color: var(--muted); font-weight: normal; letter-spacing: 0.5px; margin-top: -2px;">Admin Portal</small>
+                </span>
+            </a>
+        </div>
+        <nav class="admin-nav" aria-label="Admin navigation">
+            <a class="admin-nav-link {{ 'active' if request.path == url_for('web.admin_dashboard') else '' }}" href="{{ url_for('web.admin_dashboard') }}">
+                <i class="bi bi-command"></i><span>Overview</span>
+            </a>
+            <a class="admin-nav-link {{ 'active' if request.path == url_for('web.admin_users') else '' }}" href="{{ url_for('web.admin_users') }}">
+                <i class="bi bi-people"></i><span>Users</span>
+            </a>
+            <a class="admin-nav-link {{ 'active' if request.path == url_for('web.admin_transactions') else '' }}" href="{{ url_for('web.admin_transactions') }}">
+                <i class="bi bi-database-check"></i><span>Transactions</span>
+            </a>
+            <a class="admin-nav-link {{ 'active' if request.path == url_for('web.admin_reports') else '' }}" href="{{ url_for('web.admin_reports') }}">
+                <i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span>
+            </a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <a class="admin-nav-link exit-link" href="{{ url_for('web.dashboard') }}">
+                <i class="bi bi-arrow-left-circle"></i><span>User App</span>
+            </a>
+        </div>
+    </aside>
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="topbar-left-group">
+                <button class="icon-button mobile-menu" type="button" aria-label="Menu"><i class="bi bi-list"></i></button>
+                <button class="icon-button sidebar-toggle" id="adminSidebarToggle" type="button" aria-label="Toggle Sidebar"><i class="bi bi-text-left"></i></button>
+                <label class="search-pill d-none d-md-flex ms-2" aria-label="Search">
+                    <i class="bi bi-search"></i>
+                    <input type="search" id="adminGlobalSearch" placeholder="Search operations...">
+                    <kbd>Ctrl+K</kbd>
+                </label>
+            </div>
+            <div class="top-actions">
+                <button class="icon-button" id="themeToggle" aria-label="Theme"><i class="bi bi-moon-stars"></i></button>
+                <button class="btn btn-outline-danger d-flex align-items-center gap-2" id="adminLogoutBtn">
+                    <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+                </button>
+            </div>
+        </header>
+        {% block admin_content %}{% endblock %}
+    </main>
+</div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastHost"></div>
+{% endblock %}
+

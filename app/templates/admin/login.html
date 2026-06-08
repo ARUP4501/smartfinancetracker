@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Admin Control Room | SmartFinance{% endblock %}
+{% block body %}
+<main class="admin-login-screen">
+    <section class="admin-login-copy">
+        <a class="brand-mark" href="/">
+            <span class="brand-logo"><i class="bi bi-shield-lock"></i></span>
+            <span class="brand-text">SmartFinance <strong>Admin</strong></span>
+        </a>
+        <h1>Control Room for Operations</h1>
+        <p>Review total users, transaction volume, system metrics, and generate real-time reports from a high-security operational center.</p>
+    </section>
+    <section class="auth-panel admin-auth-card">
+        <div class="card-glow"></div>
+        <div class="auth-card-header text-center">
+            <span class="admin-badge"><i class="bi bi-shield-check"></i> System Operator</span>
+            <h1>Operations Login</h1>
+            <p>Access is restricted to authorized platform controllers.</p>
+        </div>
+        <form id="adminLoginForm" class="stack-form">
+            <div class="form-group position-relative">
+                <i class="bi bi-envelope input-icon"></i>
+                <input class="form-control form-control-lg text-input" name="email" type="email" placeholder="Administrator email" required>
+            </div>
+            <div class="form-group position-relative">
+                <i class="bi bi-key input-icon"></i>
+                <input class="form-control form-control-lg text-input" name="password" type="password" placeholder="Operator password" required>
+            </div>
+            <button class="btn btn-accent btn-lg w-100 btn-glowing" type="submit">
+                <span>Enter Operations Center</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </form>
+        <div class="auth-links text-center mt-3">
+            <a class="back-link" href="{{ url_for('web.login_page') }}"><i class="bi bi-arrow-left"></i> Return to User Login</a>
+        </div>
+        <div id="authMessage" class="form-message"></div>
+    </section>
+</main>
+{% endblock %}
+

@@ -1,0 +1,18 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Admin Reports | SmartFinance{% endblock %}
+{% block admin_title %}System Reports{% endblock %}
+{% block admin_content %}
+<section class="content-grid two-col">
+    <article class="panel" style="animation: slideInUp 0.5s ease forwards;">
+        <div class="panel-head"><h2>Platform Summary</h2></div>
+        <div id="adminReportSummary" class="insight-list"></div>
+    </article>
+    <article class="panel" style="animation: slideInUp 0.6s ease forwards;">
+        <div class="panel-head"><h2>Admin Notes</h2></div>
+        <div class="insight-item">
+            <strong>Report scope</strong>
+            <p class="mb-0">This portal reads all users and all transactions. User-side reports remain scoped to the logged-in user.</p>
+        </div>
+    </article>
+</section>
+{% endblock %}

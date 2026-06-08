@@ -1,0 +1,125 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Budgets | SmartFinance{% endblock %}
+{% block page_title %}Budgets{% endblock %}
+{% block page_subtitle %}Track your spending limits{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-brown d-flex align-items-center gap-2" id="openAddBudgetBtnTop" type="button" style="height: 40px; padding: 0 16px; font-size: 0.88rem;">
+    <i class="bi bi-plus-lg"></i> Add Budget
+</button>
+{% endblock %}
+
+{% block page_content %}
+<!-- KPI Stats Row -->
+<section class="row row-cols-1 row-cols-md-3 g-3 mb-4 mt-1">
+    <div class="col">
+        <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-violet" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
+            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Budget</small>
+            <strong id="totalBudgetVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">₹0</strong>
+        </div>
+    </div>
+    <div class="col">
+        <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-pink" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
+            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Spent</small>
+            <strong id="totalSpentVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">₹0</strong>
+        </div>
+    </div>
+    <div class="col">
+        <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-green" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
+            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Remaining</small>
+            <strong id="remainingVal" style="font-size: 1.68rem; font-weight: 900; color: var(--green);">₹0</strong>
+        </div>
+    </div>
+</section>
+
+<!-- Empty State Panel -->
+<div class="panel p-5 text-center d-flex flex-column align-items-center justify-content-center border rounded-3" id="emptyBudgetsState" style="min-height: 340px; background: var(--surface); border-color: var(--line) !important;">
+    <div class="d-flex align-items-center justify-content-center mb-3" style="width: 68px; height: 68px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+        <i class="bi bi-bullseye" style="font-size: 1.85rem;"></i>
+    </div>
+    <h4 class="fw-bold mb-2">No budgets yet</h4>
+    <p class="text-muted mb-4" style="font-size: 0.95rem;">Set spending limits to track your money</p>
+    <button class="btn btn-brown px-4 py-2" id="openAddBudgetBtnCenter" type="button">
+        <i class="bi bi-plus-lg"></i> Create Budget
+    </button>
+</div>
+
+<!-- Budgets List Panel -->
+<div class="panel border rounded-3 d-none" id="budgetsListPanel" style="background: var(--surface); border-color: var(--line) !important;">
+    <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+        <h2>Active Budgets</h2>
+    </div>
+    <div class="d-flex flex-column gap-3" id="budgetsContainer">
+        <!-- Budgets populated dynamically -->
+    </div>
+</div>
+
+<!-- Add/Edit Budget Modal Backdrop -->
+<div class="modal-backdrop" id="budgetModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="budgetModalTitle" style="max-width: 460px; padding: 28px;">
+        <button class="modal-close-btn" id="closeBudgetModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-bullseye" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="budgetModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900; line-height: 1.1;">New Budget</h3>
+                <small id="budgetModalSubtitle" class="text-muted" style="font-size: 0.85rem;">Set a spending limit for a category</small>
+            </div>
+        </div>
+        
+        <form id="budgetForm" class="stack-form">
+            <!-- Category selection -->
+            <div>
+                <label class="form-label mb-1">Category (leave empty for overall)</label>
+                <select name="category" id="budgetCategorySelect" class="form-select" required>
+                    <option value="Overall">All categories (overall)</option>
+                    <option value="Food">🍔 Food</option>
+                    <option value="Travel">✈️ Travel</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Bills">🧾 Bills</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Healthcare">🏥 Healthcare</option>
+                    <option value="Education">📚 Education</option>
+                    <option value="Other">💳 Other</option>
+                </select>
+            </div>
+            
+            <!-- Budget Amount -->
+            <div class="mt-3">
+                <label class="form-label mb-1">Budget Amount</label>
+                <input type="number" name="amount" class="form-control" placeholder="5000" step="0.01" required id="budgetAmountInput">
+            </div>
+            
+            <!-- Period -->
+            <div class="mt-3">
+                <label class="form-label mb-1">Period</label>
+                <select name="period" id="budgetPeriodSelect" class="form-select" required>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="mt-4 d-flex justify-content-end">
+                <button class="btn btn-brown px-4 py-2" type="submit" id="submitBudgetBtn">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Budget Confirmation Modal Backdrop -->
+<div class="modal-backdrop" id="deleteBudgetConfirmModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="deleteBudgetModalTitle" style="max-width: 440px; padding: 24px;">
+        <h3 id="deleteBudgetModalTitle" class="modal-title" style="font-size: 1.25rem; font-weight: 700;">Delete Budget</h3>
+        <p class="mt-3" style="color: var(--muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 24px;">Are you sure you want to delete this budget? This action cannot be undone.</p>
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-ghost border-0 bg-transparent text-muted" id="cancelDeleteBudgetBtn" type="button" style="padding: 8px 16px;">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBudgetBtn" type="button" style="background: #ef4444; border: 0; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); color: #fff; padding: 8px 18px;">Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "pages/_layout.html" %}
+{% block title %}Admin | SmartFinance{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+{% block page_content %}
+<section class="dashboard-grid" id="adminMetrics"></section>
+<section class="panel">
+    <div class="panel-head"><h2>User Analytics</h2></div>
+    <div class="table-responsive"><table class="table app-table"><thead><tr><th>User ID</th><th>Transactions</th><th>Volume</th></tr></thead><tbody id="adminTable"></tbody></table></div>
+</section>
+{% endblock %}

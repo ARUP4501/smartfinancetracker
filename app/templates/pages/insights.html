@@ -1,0 +1,490 @@
+{% extends "pages/_layout.html" %}
+{% block title %}AI Insights | SmartFinance{% endblock %}
+{% block page_title %}AI Financial Insights{% endblock %}
+{% block page_subtitle %}Personalized rule-based algorithms analyzing your wallet.{% endblock %}
+
+{% block page_content %}
+<style>
+    /* Circular Progress Ring */
+    .health-score-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 0;
+    }
+    
+    .progress-ring {
+        position: relative;
+        width: 150px;
+        height: 150px;
+    }
+    
+    .progress-ring__circle {
+        transition: stroke-dashoffset 0.6s ease-in-out;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+    
+    .score-value {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    
+    .score-value strong {
+        font-size: 2.25rem;
+        font-weight: 900;
+        color: var(--text);
+        display: block;
+        line-height: 1;
+    }
+    
+    .score-value span {
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+    }
+
+    .health-badge {
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        margin-top: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        display: inline-block;
+    }
+
+    /* Recommendations layout */
+    .insight-card-item {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        background: var(--surface-soft);
+        margin-bottom: 12px;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .insight-card-item:hover {
+        transform: translateY(-2px);
+        border-color: rgba(124, 77, 255, 0.3) !important;
+    }
+
+    .insight-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.15rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Severity Themes */
+    .theme-warning {
+        border-left: 4px solid var(--pink) !important;
+    }
+    .theme-warning .insight-card-icon {
+        background: rgba(255, 61, 112, 0.12);
+        color: var(--pink);
+    }
+    
+    .theme-success {
+        border-left: 4px solid var(--green) !important;
+    }
+    .theme-success .insight-card-icon {
+        background: rgba(0, 209, 143, 0.12);
+        color: var(--green);
+    }
+    
+    .theme-info {
+        border-left: 4px solid var(--blue) !important;
+    }
+    .theme-info .insight-card-icon {
+        background: rgba(32, 136, 255, 0.12);
+        color: var(--blue);
+    }
+
+    /* Chat UI */
+    .chat-box {
+        height: 330px;
+        overflow-y: auto;
+        padding: 18px;
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        scroll-behavior: smooth;
+    }
+
+    .chat-msg {
+        max-width: 82%;
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .chat-msg-advisor {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        color: var(--text);
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+    }
+
+    .chat-msg-user {
+        background: var(--accent);
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+    }
+
+    .chat-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .chat-preset-btn {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        color: var(--text);
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .chat-preset-btn:hover {
+        background: var(--surface-soft);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(124, 77, 255, 0.15);
+    }
+    
+    .advisor-typing {
+        align-self: flex-start;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        border-bottom-left-radius: 2px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 18px;
+    }
+    
+    .dot-pulse {
+        width: 6px;
+        height: 6px;
+        background: var(--muted);
+        border-radius: 50%;
+        animation: pulse 1.2s infinite ease-in-out;
+    }
+    
+    .dot-pulse:nth-child(2) { animation-delay: 0.2s; }
+    .dot-pulse:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(0.6); opacity: 0.4; }
+        50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* Chat Header Buttons */
+    .chat-header-btn {
+        background: none;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.73rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    .chat-header-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(124, 77, 255, 0.06);
+    }
+
+    /* History Panel */
+    .chat-history-panel {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        background: #0d1117;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        display: flex;
+        flex-direction: column;
+        animation: historySlideIn 0.25s ease;
+        overflow: hidden;
+    }
+    @keyframes historySlideIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .chat-history-clear-all {
+        background: none;
+        border: 1px solid rgba(255, 77, 77, 0.3);
+        color: #ff6b6b;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .chat-history-clear-all:hover {
+        background: rgba(255, 77, 77, 0.12);
+        border-color: #ff6b6b;
+    }
+
+    .chat-history-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 4px;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+    }
+    .chat-history-close:hover { color: var(--text); }
+
+    .chat-history-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+    }
+
+    .chat-history-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--muted);
+        gap: 8px;
+        font-size: 0.82rem;
+    }
+
+    .chat-history-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        margin-bottom: 4px;
+    }
+    .chat-history-item:hover {
+        background: var(--surface-soft);
+        border-color: var(--line);
+    }
+    .chat-history-item.active {
+        background: rgba(124, 77, 255, 0.08);
+        border-color: var(--accent);
+    }
+
+    .chat-history-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .chat-history-item-preview {
+        font-size: 0.8rem;
+        color: var(--text);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .chat-history-item-meta {
+        font-size: 0.68rem;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .chat-history-item-delete {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        opacity: 0;
+        flex-shrink: 0;
+    }
+    .chat-history-item:hover .chat-history-item-delete { opacity: 1; }
+    .chat-history-item-delete:hover { color: #ff6b6b; background: rgba(255, 77, 77, 0.1); }
+</style>
+
+<div class="row g-4">
+    <!-- Health Score Index Widget -->
+    <div class="col-12 col-md-5">
+        <section class="panel h-100 p-4 border rounded-3 d-flex flex-column align-items-center justify-content-center" style="background: var(--surface); border-color: var(--line) !important;">
+            <div class="panel-head w-100 border-bottom pb-2 mb-3" style="border-color: var(--line) !important;">
+                <h2 class="mb-0 text-center"><i class="bi bi-heart-pulse-fill text-accent me-2"></i>Health Index</h2>
+            </div>
+            
+            <div class="health-score-container text-center">
+                <div class="progress-ring">
+                    <svg class="progress-ring-svg" width="150" height="150">
+                        <circle class="progress-ring__bg" stroke="var(--line)" stroke-width="8" fill="transparent" r="66" cx="75" cy="75"/>
+                        <circle class="progress-ring__circle" id="healthScoreCircle" stroke="var(--accent)" stroke-width="8" stroke-dasharray="414.69" stroke-dashoffset="414.69" stroke-linecap="round" fill="transparent" r="66" cx="75" cy="75"/>
+                    </svg>
+                    <div class="score-value">
+                        <strong id="healthScoreVal">0</strong>
+                        <span>Health score</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="health-badge bg-secondary text-white" id="healthBadge">Calculating...</span>
+                </div>
+            </div>
+            
+            <div class="w-100 mt-4 border-top pt-3" style="border-color: var(--line) !important; font-size: 0.88rem;">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted"><i class="bi bi-arrow-up-right text-success me-1"></i>Monthly Income:</span>
+                    <strong id="healthIncome">₹0</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted"><i class="bi bi-arrow-down-left text-danger me-1"></i>Monthly Expenses:</span>
+                    <strong id="healthExpense">₹0</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted"><i class="bi bi-piggy-bank-fill text-info me-1"></i>Savings Rate:</span>
+                    <strong id="healthSavingsRate">0%</strong>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- AI Advisor Chat Panel -->
+    <div class="col-12 col-md-7">
+        <section class="panel h-100 p-4 border rounded-3 d-flex flex-column" style="background: var(--surface); border-color: var(--line) !important; position: relative;">
+            <div class="panel-head border-bottom pb-2 mb-3" style="border-color: var(--line) !important;">
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-stars text-accent" style="font-size: 1.25rem;"></i>
+                        <h2 class="mb-0">Ask AI Financial Advisor</h2>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <button id="newChatBtn" title="Start new chat" class="chat-header-btn">
+                            <i class="bi bi-plus-lg me-1"></i>New
+                        </button>
+                        <button id="historyToggleBtn" title="Chat history" class="chat-header-btn">
+                            <i class="bi bi-clock-history me-1"></i>History
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- History Panel (hidden by default) -->
+            <div id="chatHistoryPanel" class="chat-history-panel" style="display: none;">
+                <div class="chat-history-header">
+                    <span><i class="bi bi-clock-history me-1"></i>Chat History</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="clearAllHistoryBtn" class="chat-history-clear-all" title="Clear all history">
+                            <i class="bi bi-trash3 me-1"></i>Clear All
+                        </button>
+                        <button id="historyCloseBtn" class="chat-history-close" title="Close">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="chatHistoryList" class="chat-history-list">
+                    <div class="chat-history-empty">
+                        <i class="bi bi-chat-left-dots" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <p>No previous chats yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat logs -->
+            <div class="chat-box" id="advisorChat">
+                <div class="chat-msg chat-msg-advisor">
+                    Hello! I am your SmartFinance AI Advisor. Click one of the questions below, and I will analyze your local transactions to generate a personalized report.
+                </div>
+            </div>
+            
+            <!-- Preset Questions -->
+            <div class="chat-presets" id="chatPresets">
+                <button class="chat-preset-btn" data-preset="savings">
+                    <i class="bi bi-piggy-bank me-1"></i> How can I save more?
+                </button>
+                <button class="chat-preset-btn" data-preset="spending">
+                    <i class="bi bi-shield-exclamation me-1"></i> Spendings Analysis
+                </button>
+                <button class="chat-preset-btn" data-preset="budget">
+                    <i class="bi bi-wallet2 me-1"></i> Highlight budget risks
+                </button>
+            </div>
+
+            <!-- Custom User Input Form -->
+            <form id="chatInputForm" class="d-flex gap-2 mt-3 pt-3 border-top" style="border-color: var(--line) !important;">
+                <input type="text" id="chatInputText" class="form-control" placeholder="Ask AI Advisor anything..." autocomplete="off" required style="border-radius: 12px; background: var(--surface-soft); border-color: var(--line); color: var(--text);">
+                <button type="submit" class="btn btn-accent px-3 d-flex align-items-center justify-content-center" style="border-radius: 12px;">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </section>
+    </div>
+
+    <!-- Recommendation Ledger -->
+    <div class="col-12">
+        <section class="panel p-4 border rounded-3" style="background: var(--surface); border-color: var(--line) !important;">
+            <div class="panel-head border-bottom pb-2 mb-4" style="border-color: var(--line) !important;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-lightbulb-fill text-warning" style="font-size: 1.2rem;"></i>
+                    <h2 class="mb-0">Active AI Recommendations</h2>
+                </div>
+            </div>
+            
+            <div id="insightsList">
+                <!-- Loaded dynamically -->
+                <div class="text-center py-4 text-muted" id="insightsLoading">
+                    <div class="spinner-border spinner-border-sm text-accent me-2" role="status"></div> Loading recommendations...
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
