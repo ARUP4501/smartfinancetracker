@@ -15,6 +15,12 @@
             <button class="link-button" data-bs-toggle="modal" data-bs-target="#resetModal">Reset password</button>
         </div>
         <div id="authMessage" class="form-message"></div>
+        <script>
+            if (new URLSearchParams(location.search).get('registered') === '1') {
+                const el = document.getElementById('authMessage');
+                if (el) { el.textContent = '✅ Account created successfully! Please login.'; el.style.color = 'var(--green, #00d68f)'; }
+            }
+        </script>
     </section>
 </main>
 <div class="modal fade" id="resetModal" tabindex="-1">

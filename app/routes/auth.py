@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from flask import Blueprint, current_app, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, set_access_cookies, unset_jwt_cookies
@@ -8,6 +8,8 @@ from app.extensions import bcrypt
 from app.models.collections import users
 from app.utils.responses import fail, ok
 from app.utils.security import normalize_email, password_errors
+from app.utils.email import send_reset_password_email
+
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -28,6 +30,10 @@ def user_payload(user):
         "default_wallet": user.get("default_wallet", "Default"),
         "ai_tone": user.get("ai_tone", "Professional"),
         "has_onboarded": user.get("has_onboarded", False),
+        "notifications_enabled": user.get("notifications_enabled", True),
+        "email_alerts_enabled": user.get("email_alerts_enabled", True),
+        "weekly_summaries_enabled": user.get("weekly_summaries_enabled", True),
+        "budget_warnings_enabled": user.get("budget_warnings_enabled", True),
     }
 
 
@@ -45,6 +51,10 @@ def issue_user_cookie(user, message="Profile updated."):
         "default_wallet": user.get("default_wallet", "Default"),
         "ai_tone": user.get("ai_tone", "Professional"),
         "has_onboarded": user.get("has_onboarded", False),
+        "notifications_enabled": user.get("notifications_enabled", True),
+        "email_alerts_enabled": user.get("email_alerts_enabled", True),
+        "weekly_summaries_enabled": user.get("weekly_summaries_enabled", True),
+        "budget_warnings_enabled": user.get("budget_warnings_enabled", True),
     }
     token = create_access_token(identity=str(user["_id"]), additional_claims=claims)
     response, status = ok({"user": user_payload(user)}, message)
@@ -83,11 +93,12 @@ def register():
         "currency": "₹",
         "risk_profile": "Moderate",
         "monthly_income_goal": 0,
+        "verified": True,
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }
     users().insert_one(doc)
-    return ok({"email": email, "role": role}, "Account created.", 201)
+    return ok({"email": email, "role": role}, "Account created successfully.", 201)
 
 
 @auth_bp.post("/login")
@@ -191,6 +202,14 @@ def update_me():
         update["referral_source"] = (payload.get("referral_source") or "").strip()
     if "has_onboarded" in payload:
         update["has_onboarded"] = bool(payload.get("has_onboarded"))
+    if "notifications_enabled" in payload:
+        update["notifications_enabled"] = bool(payload.get("notifications_enabled"))
+    if "email_alerts_enabled" in payload:
+        update["email_alerts_enabled"] = bool(payload.get("email_alerts_enabled"))
+    if "weekly_summaries_enabled" in payload:
+        update["weekly_summaries_enabled"] = bool(payload.get("weekly_summaries_enabled"))
+    if "budget_warnings_enabled" in payload:
+        update["budget_warnings_enabled"] = bool(payload.get("budget_warnings_enabled"))
 
     users().update_one({"_id": user["_id"]}, {"$set": update})
     user.update(update)
@@ -204,11 +223,13 @@ def change_password():
     if not user:
         return fail("User not found.", 404)
     payload = request.get_json() or {}
-    current_password = payload.get("current_password", "")
     new_password = payload.get("new_password", "")
     
-    if not bcrypt.check_password_hash(user["password_hash"], current_password):
-        return fail("Current password is incorrect.", 400)
+    # Verify current password only if it is provided (modal form passes it, inline form does not)
+    if "current_password" in payload:
+        current_password = payload.get("current_password", "")
+        if not bcrypt.check_password_hash(user["password_hash"], current_password):
+            return fail("Current password is incorrect.", 400)
         
     errors = password_errors(new_password)
     if errors:
@@ -236,9 +257,22 @@ def logout():
 def reset_request():
     payload = request.get_json() or {}
     email = normalize_email(payload.get("email"))
+    
+    user = users().find_one({"email": email}) if email else None
+    if not user:
+        return ok({}, "If your email is registered, you will receive a password reset link.")
+        
     token = secrets.token_urlsafe(32)
-    users().update_one({"email": email}, {"$set": {"reset_token": token, "reset_requested_at": datetime.now(timezone.utc)}})
-    return ok({"dev_reset_token": token}, "Password reset token generated. In production this is emailed.")
+    users().update_one({"_id": user["_id"]}, {"$set": {"reset_token": token, "reset_requested_at": datetime.now(timezone.utc)}})
+    
+    # Construct the reset link URL
+    reset_url = f"{request.host_url.rstrip('/')}/password/reset?token={token}"
+    
+    # Send reset link email in real time
+    send_reset_password_email(email, reset_url)
+    
+    return ok({"dev_reset_token": token, "reset_url": reset_url}, "If your email is registered, you will receive a password reset link.")
+
 
 
 @auth_bp.post("/password/reset")
@@ -255,3 +289,31 @@ def reset_password():
         {"$set": {"password_hash": bcrypt.generate_password_hash(payload["password"]).decode("utf-8")}, "$unset": {"reset_token": "", "reset_requested_at": ""}},
     )
     return ok({}, "Password reset successful.")
+
+
+
+
+
+@auth_bp.delete("/delete-account")
+@jwt_required()
+def delete_account():
+    user_id = get_jwt_identity()
+    user = users().find_one({"_id": user_id})
+    if not user:
+        return fail("User not found.", 404)
+        
+    # Recursive deletion to maintain database integrity
+    from app.models.collections import transactions, budgets, goals, categories, notifications, investments, financial_insights
+    users().delete_one({"_id": user_id})
+    transactions().delete_many({"user_id": user_id})
+    budgets().delete_many({"user_id": user_id})
+    goals().delete_many({"user_id": user_id})
+    categories().delete_many({"user_id": user_id})
+    notifications().delete_many({"user_id": user_id})
+    investments().delete_many({"user_id": user_id})
+    financial_insights().delete_many({"user_id": user_id})
+    
+    response, status = ok({}, "Account deleted successfully.")
+    unset_jwt_cookies(response)
+    return response, status
+
