@@ -1,113 +1,1990 @@
 {% extends "base.html" %}
-{% block title %}SmartFinance | Premium Wealth Tracking & AI Financial Intelligence{% endblock %}
+{% block title %}SmartFinance | AI-Powered Wealth Protocol & Money Manager{% endblock %}
+
 {% block body %}
-<main class="landing-shell">
-    <nav class="navbar navbar-expand-lg landing-nav">
+<!-- Load Google Fonts for premium typography -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+
+<style>
+    /* Reset & Custom Variables */
+    :root {
+        --bg: #070a13;
+        --text-primary: #ffffff;
+        --text-secondary: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-indigo: #6366f1;
+        --accent-purple: #8b5cf6;
+        --accent-glow: rgba(99, 102, 241, 0.15);
+        --glass-bg: rgba(15, 23, 42, 0.4);
+        --glass-border: rgba(255, 255, 255, 0.05);
+        --glass-border-hover: rgba(99, 102, 241, 0.3);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg);
+        color: #f3f4f6;
+        overflow-x: hidden;
+    }
+    
+    h1, h2, h3, .brand-mark, .nav-link-brand {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Grid & Aurora Glowing Backgrounds */
+    .aurora-bg {
+        position: relative;
+        background-color: var(--bg);
+        min-height: 100vh;
+        width: 100%;
+        overflow: hidden;
+    }
+    
+    .grid-bg-overlay {
+        position: absolute;
+        inset: 0;
+        background-image: 
+            linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        background-size: 50px 50px;
+        background-position: center;
+        mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, #000 75%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, #000 75%, transparent 100%);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .neon-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(140px);
+        opacity: 0.3;
+        z-index: 0;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        animation: floatNeon 18s infinite alternate;
+    }
+    
+    .neon-blob-1 {
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, var(--accent-indigo) 0%, rgba(99, 102, 241, 0) 70%);
+        top: -150px;
+        right: 5%;
+        animation-delay: 0s;
+    }
+    
+    .neon-blob-2 {
+        width: 700px;
+        height: 700px;
+        background: radial-gradient(circle, var(--accent-purple) 0%, rgba(139, 92, 246, 0) 70%);
+        bottom: 5%;
+        left: -150px;
+        animation-delay: -5s;
+    }
+    
+    .neon-blob-3 {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, var(--accent-blue) 0%, rgba(59, 130, 246, 0) 70%);
+        top: 35%;
+        left: 25%;
+        animation-delay: -10s;
+        opacity: 0.2;
+    }
+
+    @keyframes floatNeon {
+        0% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(60px, -50px) scale(1.08); }
+        100% { transform: translate(-40px, 70px) scale(0.95); }
+    }
+
+    /* ── Particle Canvas Background ── */
+    #particle-canvas {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.35;
+    }
+
+
+    /* ── Circular Scroll Progress Widget ── */
+    #scrollWidget {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 58px;
+        height: 58px;
+        z-index: 9999;
+        cursor: pointer !important;
+        opacity: 0;
+        transform: scale(0.7);
+        transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #scrollWidget.visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+    #scrollWidget svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+    #scrollWidget .bg-circle {
+        fill: rgba(15,23,42,0.85);
+        stroke: rgba(255,255,255,0.06);
+        stroke-width: 1;
+    }
+    #scrollWidget .progress-circle {
+        fill: none;
+        stroke-width: 5;
+        stroke-linecap: round;
+        stroke: url(#arcGrad);
+        transition: stroke-dashoffset 0.2s ease;
+        filter: drop-shadow(0 0 4px rgba(0, 245, 212, 0.8));
+    }
+    #scrollPct {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.5px;
+        pointer-events: none;
+    }
+    #scrollWidget:hover #scrollPct { color: #a5b4fc; }
+    #scrollWidget .up-arrow {
+        display: none;
+        font-size: 1rem;
+        color: #a5b4fc;
+    }
+    #scrollWidget:hover .pct-text { display: none; }
+    #scrollWidget:hover .up-arrow { display: block; }
+
+    /* ── Square Border Progress (viewport frame) ── */
+    #squareBorderProgress {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9998;
+    }
+    #squareBorderProgress rect {
+        fill: none;
+        stroke: url(#sqGrad);
+        stroke-width: 5;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.15s ease;
+        filter: drop-shadow(0 0 6px rgba(0, 245, 212, 0.8));
+    }
+
+    /* Sticky Navbar */
+    .nav-glass {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background: rgba(7, 10, 19, 0.45) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 16px 0;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .nav-glass.scrolled {
+        padding: 12px 0;
+        background: rgba(7, 10, 19, 0.8) !important;
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .animate-popover {
+        animation: scalePopover 0.2s ease-out forwards;
+        transform-origin: top right;
+    }
+    @keyframes scalePopover {
+        from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Hero Section */
+    .hero-view {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        padding-top: 150px;
+        padding-bottom: 80px;
+        z-index: 10;
+    }
+
+    .hero-headline {
+        font-size: clamp(2.8rem, 6.2vw, 5.6rem);
+        line-height: 0.96;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        color: #ffffff;
+        margin-bottom: 24px;
+    }
+
+    .gradient-blue-text {
+        background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Premium Buttons */
+    .btn-solid-indigo {
+        background-color: var(--accent-indigo);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 12px 26px;
+        border-radius: 12px;
+        border: 1px solid var(--accent-indigo);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-solid-indigo:hover {
+        background-color: #5558e6;
+        border-color: #5558e6;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35);
+        transform: translateY(-2px);
+        color: #ffffff;
+    }
+
+    .btn-glass-bordered {
+        background-color: rgba(255, 255, 255, 0.02);
+        color: #e2e8f0;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 12px 26px;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(8px);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-glass-bordered:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    /* Platform Indicators Badge */
+    .badge-pill-accent {
+        background: rgba(99, 102, 241, 0.05);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        color: #cbd5e1;
+        font-weight: 500;
+        font-size: 0.82rem;
+        border-radius: 999px;
+    }
+
+    /* Value Cards */
+    .feature-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 32px;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(99, 102, 241, 0.06), transparent 50%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-card:hover {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--glass-border-hover);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 60px rgba(99,102,241,0.08);
+    }
+    /* JS will handle 3D tilt transforms on .feature-card — override translateY */
+    .feature-card.tilt-active {
+        transform: none !important; /* let JS matrix3d take over */
+    }
+
+    .feature-card-icon-container {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        background: rgba(99, 102, 241, 0.08);
+        border: 1px solid rgba(99, 102, 241, 0.12);
+        color: var(--accent-indigo);
+        font-size: 1.45rem;
+        transition: all 0.3s ease;
+    }
+    .feature-card:hover .feature-card-icon-container {
+        background: var(--accent-indigo);
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+
+    .bullet-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        margin-top: 10px;
+    }
+    .bullet-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent-indigo);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: bold;
+    }
+
+    /* Single Premium iPhone Mockup */
+    .iphone-mockup-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        padding: 20px 0;
+    }
+
+    /* 3D Entry Perspective Tilt Reveal — only when parent section visible */
+    .iphone-mockup-tilt-wrapper {
+        opacity: 0;
+        transform: perspective(1200px) rotateY(-18deg) rotateX(10deg) translateY(40px) scale(0.95);
+        transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .col-lg-6.reveal-right.active .iphone-mockup-tilt-wrapper,
+    .reveal-right.active .iphone-mockup-tilt-wrapper {
+        opacity: 1;
+        transform: perspective(1200px) rotateY(-6deg) rotateX(4deg) translateY(0) scale(1);
+    }
+
+    .iphone-mockup-frame {
+        width: 320px;
+        height: 640px;
+        background: #000000;
+        border-radius: 46px;
+        padding: 12px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8),
+                    0 0 50px rgba(99, 102, 241, 0.15); /* Indigo glow */
+        border: 1.5px solid rgba(255, 255, 255, 0.15);
+        position: relative;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: floatPhone 6s ease-in-out infinite;
+    }
+
+    @keyframes floatPhone {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-16px); }
+        100% { transform: translateY(0); }
+    }
+
+    /* SVG Path Draw-in Scroll Animations */
+    .iphone-sparkline path {
+        stroke-dasharray: 400;
+        stroke-dashoffset: 400;
+        transition: stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s;
+    }
+    .reveal.active .iphone-sparkline path,
+    .reveal-right.active .iphone-sparkline path {
+        stroke-dashoffset: 0;
+    }
+
+    .iphone-area-chart path:last-of-type {
+        stroke-dasharray: 600;
+        stroke-dashoffset: 600;
+        transition: stroke-dashoffset 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s;
+    }
+    .reveal.active .iphone-area-chart path:last-of-type,
+    .reveal-right.active .iphone-area-chart path:last-of-type {
+        stroke-dashoffset: 0;
+    }
+
+    .iphone-area-chart path:first-of-type {
+        opacity: 0;
+        transition: opacity 1.5s ease-out 1.6s;
+    }
+    .reveal.active .iphone-area-chart path:first-of-type,
+    .reveal-right.active .iphone-area-chart path:first-of-type {
+        opacity: 1;
+    }
+
+    .iphone-area-chart circle {
+        transform: scale(0);
+        transform-box: fill-box;
+        transform-origin: center;
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .iphone-area-chart circle:first-of-type {
+        transition-delay: 1.5s;
+    }
+    .iphone-area-chart circle:last-of-type {
+        transition-delay: 2.1s;
+    }
+    .reveal.active .iphone-area-chart circle,
+    .reveal-right.active .iphone-area-chart circle {
+        transform: scale(1);
+    }
+    
+    .iphone-mockup-frame::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 46px;
+        padding: 2px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.3), transparent 70%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .iphone-mockup-screen {
+        background: #090d16;
+        border-radius: 36px;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        padding: 28px 18px 18px 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .iphone-dynamic-island {
+        width: 100px;
+        height: 24px;
+        background: #000000;
+        border-radius: 20px;
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.15);
+    }
+
+    .iphone-status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.72rem;
+        color: #94a3b8;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding: 0 6px;
+    }
+
+    .iphone-profile-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .iphone-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid rgba(255, 255, 255, 0.15);
+    }
+    .iphone-bell-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        position: relative;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+    .iphone-bell-dot {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 5px;
+        height: 5px;
+        background: var(--accent-purple);
+        border-radius: 50%;
+        box-shadow: 0 0 6px var(--accent-purple);
+    }
+
+    .iphone-balance-card {
+        background: rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 12px;
+        margin-bottom: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+    .iphone-trend-badge {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+    }
+    .iphone-sparkline-container {
+        height: 32px;
+        width: 100%;
+        margin-top: 6px;
+    }
+    .iphone-sparkline {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .iphone-flow-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 12px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .iphone-flow-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+    }
+    .iphone-flow-icon.income {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    .iphone-flow-icon.expense {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    .iphone-flow-label {
+        font-size: 0.58rem;
+        color: #64748b;
+        display: block;
+        line-height: 1.1;
+    }
+    .iphone-flow-amount {
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .iphone-flow-amount.income {
+        color: #10b981;
+    }
+    .iphone-flow-amount.expense {
+        color: #ef4444;
+    }
+
+    .iphone-chart-section {
+        background: rgba(15, 23, 42, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        padding: 12px;
+        margin-bottom: 12px;
+        text-align: left;
+    }
+    .iphone-area-chart-container {
+        height: 70px;
+        width: 100%;
+        margin-top: 4px;
+    }
+    .iphone-area-chart {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .iphone-categories-list {
+        text-align: left;
+        margin-bottom: 12px;
+    }
+    .iphone-category-item {
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+    .iphone-cat-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+    }
+    .iphone-cat-icon.food {
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--accent-purple);
+    }
+    .iphone-cat-icon.shopping {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+    }
+    .iphone-cat-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #ffffff;
+        display: block;
+        line-height: 1.1;
+    }
+    .iphone-cat-spent {
+        font-size: 0.55rem;
+        color: #64748b;
+    }
+    .iphone-cat-progress {
+        height: 3px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 1.5px;
+        margin-top: 6px;
+        overflow: hidden;
+    }
+    .iphone-cat-progress-fill {
+        height: 100%;
+        border-radius: 1.5px;
+    }
+    .iphone-cat-progress-fill.food {
+        background: var(--accent-purple);
+    }
+    .iphone-cat-progress-fill.shopping {
+        background: var(--accent-blue);
+    }
+
+    .iphone-nav-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: auto;
+    }
+    .iphone-nav-item {
+        font-size: 0.88rem;
+        color: #64748b;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .iphone-nav-item:hover, .iphone-nav-item.active {
+        color: var(--accent-indigo);
+    }
+    .iphone-nav-item.chat-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--accent-indigo);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        font-size: 0.8rem;
+    }
+
+    /* FAQ interactive accordions styling */
+    .faq-container-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 12px 24px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .faq-item {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 22px 0;
+        transition: all 0.3s ease;
+    }
+    .faq-item:last-child {
+        border-bottom: 0;
+    }
+    
+    .faq-header {
+        font-weight: 700;
+        font-size: 1.15rem;
+        cursor: pointer;
+        color: #ffffff;
+        transition: color 0.2s;
+    }
+    .faq-header:hover {
+        color: var(--accent-indigo);
+    }
+
+    .faq-chevron {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .faq-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .faq-item.open .faq-chevron {
+        transform: rotate(180deg);
+        color: var(--accent-indigo);
+    }
+
+    .faq-body p {
+        color: var(--text-secondary);
+        font-size: 0.96rem;
+        line-height: 1.6;
+        margin-top: 14px;
+        margin-bottom: 0;
+    }
+
+    /* ═══════════════════════════════════════
+       3D REVEAL — rotateX flip entrance
+    ═══════════════════════════════════════ */
+    .reveal-3d {
+        opacity: 0;
+        transform: perspective(900px) rotateX(28deg) translateY(50px);
+        transform-origin: bottom center;
+        transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: blur(6px);
+        will-change: opacity, transform, filter;
+    }
+    .reveal-3d.active {
+        opacity: 1;
+        transform: perspective(900px) rotateX(0deg) translateY(0);
+        filter: blur(0px);
+    }
+
+    /* ── 3D Section Heading Depth Effect ── */
+    .depth-heading {
+        text-shadow:
+            0 1px 0 rgba(99,102,241,0.3),
+            0 2px 0 rgba(99,102,241,0.2),
+            0 4px 0 rgba(99,102,241,0.1),
+            0 8px 30px rgba(99,102,241,0.15);
+    }
+
+    /* ── Floating Badge 3D Pulse ── */
+    @keyframes badge3dFloat {
+        0%   { transform: perspective(600px) rotateX(0deg) rotateY(0deg) translateY(0); }
+        25%  { transform: perspective(600px) rotateX(4deg) rotateY(-3deg) translateY(-4px); }
+        50%  { transform: perspective(600px) rotateX(0deg) rotateY(4deg) translateY(-8px); }
+        75%  { transform: perspective(600px) rotateX(-4deg) rotateY(-2deg) translateY(-3px); }
+        100% { transform: perspective(600px) rotateX(0deg) rotateY(0deg) translateY(0); }
+    }
+    .badge-pill-accent {
+        animation: badge3dFloat 6s ease-in-out infinite;
+    }
+
+    /* ═══════════════════════════════════════
+       SCROLL REVEAL ENGINE — Repeatable
+       Animations fire every time element
+       enters the viewport (up or down)
+    ═══════════════════════════════════════ */
+
+    /* Fade up (default) */
+    .reveal {
+        opacity: 0;
+        transform: translateY(36px);
+        transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: blur(4px);
+        will-change: opacity, transform, filter;
+    }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
+
+    /* Slide in from left */
+    .reveal-left {
+        opacity: 0;
+        transform: translateX(-50px);
+        transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: blur(4px);
+        will-change: opacity, transform, filter;
+    }
+    .reveal-left.active {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0px);
+    }
+
+    /* Slide in from right */
+    .reveal-right {
+        opacity: 0;
+        transform: translateX(50px);
+        transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: blur(4px);
+        will-change: opacity, transform, filter;
+    }
+    .reveal-right.active {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0px);
+    }
+
+    /* Zoom scale pop */
+    .reveal-scale {
+        opacity: 0;
+        transform: scale(0.88);
+        transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+        will-change: opacity, transform;
+    }
+    .reveal-scale.active {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* Staggered transition delays */
+    .delay-100 { transition-delay: 0.1s !important; }
+    .delay-200 { transition-delay: 0.2s !important; }
+    .delay-300 { transition-delay: 0.3s !important; }
+    .delay-400 { transition-delay: 0.4s !important; }
+    .delay-500 { transition-delay: 0.5s !important; }
+    .delay-600 { transition-delay: 0.6s !important; }
+    .delay-700 { transition-delay: 0.7s !important; }
+
+    /* ── Zoom + blur reveal ── */
+    .reveal-zoom {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+        transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: blur(8px);
+        will-change: opacity, transform, filter;
+    }
+    .reveal-zoom.active {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0);
+    }
+
+    /* ── Staggered cascade 3D flip cards ── */
+    .reveal-cascade {
+        opacity: 0;
+        transform: perspective(800px) rotateX(35deg) translateY(60px) scale(0.95);
+        transform-origin: bottom center;
+        transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+        filter: blur(6px);
+        will-change: opacity, transform, filter;
+    }
+    .reveal-cascade.active {
+        opacity: 1;
+        transform: perspective(800px) rotateX(0deg) translateY(0) scale(1);
+        filter: blur(0);
+    }
+
+    /* ── Marquee feature ticker ── */
+    .marquee-track {
+        overflow: hidden;
+        width: 100%;
+        mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    }
+    .marquee-inner {
+        display: flex;
+        gap: 0;
+        width: max-content;
+        animation: marqueeScroll 28s linear infinite;
+    }
+    .marquee-inner:hover { animation-play-state: paused; }
+    @keyframes marqueeScroll {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+    }
+    .marquee-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 28px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.5);
+        white-space: nowrap;
+        letter-spacing: 0.02em;
+        border-right: 1px solid rgba(255,255,255,0.05);
+        transition: color 0.3s ease;
+    }
+    .marquee-item:hover { color: rgba(255,255,255,0.9); }
+    .marquee-item i { color: var(--accent-indigo); font-size: 1rem; }
+
+    .line-spacer {
+        height: 1px;
+        width: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06) 50%, transparent);
+        margin: 80px 0;
+    }
+</style>
+
+
+    <!-- Square Border Scroll Progress (viewport frame) -->
+    <svg id="squareBorderProgress" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="sqGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00f5d4"/>
+                <stop offset="30%" stop-color="#00bbf9"/>
+                <stop offset="70%" stop-color="#8338ec"/>
+                <stop offset="100%" stop-color="#ff006e"/>
+            </linearGradient>
+        </defs>
+        <rect id="sqRect" x="4" y="4" rx="8" ry="8"/>
+    </svg>
+
+    <!-- Circular Scroll Progress Widget -->
+    <div id="scrollWidget" title="Back to top">
+        <svg viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#00f5d4"/>
+                    <stop offset="30%" stop-color="#00bbf9"/>
+                    <stop offset="70%" stop-color="#8338ec"/>
+                    <stop offset="100%" stop-color="#ff006e"/>
+                </linearGradient>
+            </defs>
+            <circle class="bg-circle" cx="29" cy="29" r="26"/>
+            <circle class="progress-circle" id="arcCircle" cx="29" cy="29" r="22"
+                stroke-dasharray="138.2" stroke-dashoffset="138.2"/>
+        </svg>
+        <div id="scrollPct">
+            <span class="pct-text">0%</span>
+            <i class="bi bi-chevron-up up-arrow"></i>
+        </div>
+    </div>
+
+<div class="aurora-bg" id="pageRoot">
+    <!-- Grid Overlay -->
+    <div class="grid-bg-overlay"></div>
+
+    <!-- Background Blobs -->
+    <div class="neon-blob neon-blob-1"></div>
+    <div class="neon-blob neon-blob-2"></div>
+    <div class="neon-blob neon-blob-3"></div>
+
+    <!-- Header Navigation -->
+    <nav class="navbar navbar-expand-lg nav-glass" id="landingNav">
         <div class="container">
-            <a class="navbar-brand brand-mark" href="/">SmartFinance</a>
-            <div class="ms-auto d-flex gap-2">
-                <a class="btn btn-ghost" href="{{ url_for('web.login_page') }}">Login</a>
-                <a class="btn btn-accent" href="{{ url_for('web.register_page') }}">Start Free</a>
+            <a class="navbar-brand brand-mark text-white fw-bold d-flex align-items-center gap-2" href="/" style="font-size: 1.35rem; letter-spacing: -0.8px;">
+                <span style="background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple)); width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;"><i class="bi bi-wallet2 text-white"></i></span>
+                Smart<span style="color: var(--accent-indigo);">Finance</span>
+            </a>
+            
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <!-- Custom Language Dropdown -->
+                <div class="dropdown" id="langSelector">
+                    <button class="btn btn-glass-bordered px-3 py-2 d-flex align-items-center gap-2" type="button" id="langBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.85rem; height: 38px; padding: 0 14px; border-radius: 10px;">
+                        <i class="bi bi-globe2"></i> <span>English</span> <i class="bi bi-chevron-down small"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end p-2 border animate-popover" style="background: #0f172a; border-color: rgba(255,255,255,0.08) !important; border-radius: 12px; min-width: 160px; max-height: 320px; overflow-y: auto;">
+                        <li><button class="dropdown-item rounded-3 py-2 active btn-lang-item" data-lang="en">🇬🇧 English</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="hi">🇮🇳 हिंदी (Hindi)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="bn">🇧🇩 বাংলা (Bengali)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="te">🇮🇳 తెలుగు (Telugu)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="mr">🇮🇳 मराठी (Marathi)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ta">🇮🇳 தமிழ் (Tamil)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="gu">🇮🇳 ગુજરાતી (Gujarati)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="kn">🇮🇳 ಕನ್ನಡ (Kannada)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="pa">🇮🇳 ਪੰਜਾਬੀ (Punjabi)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ur">🇵🇰 اردو (Urdu)</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="es">🇪🇸 Español</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="fr">🇫🇷 Français</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="de">🇩🇪 Deutsch</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ja">🇯🇵 日本語</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="zh">🇨🇳 中文</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ar">🇸🇦 العربية</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="pt">🇧🇷 Português</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ru">🇷🇺 Русский</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ko">🇰🇷 한국어</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="it">🇮🇹 Italiano</button></li>
+                    </ul>
+                </div>
+                
+                <a class="btn btn-glass-bordered px-3 d-flex align-items-center fw-bold" href="{{ url_for('web.login_page') }}" style="height: 38px; font-size: 0.88rem; border-radius: 10px;">Login</a>
+                <a class="btn btn-solid-indigo px-4 d-flex align-items-center" href="{{ url_for('web.register_page') }}" style="height: 38px; font-size: 0.88rem; border-radius: 10px; background-color: var(--accent-indigo); border-color: var(--accent-indigo); box-shadow: 0 4px 12px rgba(99,102,241,0.2);">Continue with Web App</a>
             </div>
         </div>
     </nav>
 
-    <section class="hero-fintech">
-        <img src="{{ url_for('static', filename='img/fintech-hero.png') }}" alt="SmartFinance dashboard preview"
-            class="hero-image">
-        <div class="hero-overlay"></div>
-        <div class="container hero-content">
-            <p class="eyebrow">Automated wealth intelligence</p>
-            <h1>Take Control of Your Financial Future</h1>
-            <p class="hero-copy">Track income, set automated budgets, monitor long-term goals, and unlock personalized
-                AI insights from one sleek, unified dashboard.</p>
-            <div class="d-flex flex-wrap gap-3">
-                <a href="{{ url_for('web.register_page') }}" class="btn btn-accent btn-lg">Create Free Account</a>
-                <a href="#features" class="btn btn-glass btn-lg">Explore Features</a>
+    <!-- Hero View Section -->
+    <section class="hero-view">
+        <div class="container text-center">
+            <span class="badge rounded-pill px-3 py-2 mb-4 d-inline-flex align-items-center gap-2 badge-pill-accent reveal-zoom">
+                AI-Powered Personal Finance
+            </span>
+            
+            <h1 class="hero-headline mx-auto reveal-3d delay-100 depth-heading" style="max-width: 900px; font-weight: 800; font-size: clamp(2.8rem, 6.2vw, 5.6rem);">
+                Free Budget App &<br><span class="gradient-blue-text">Money Manager</span>
+            </h1>
+            
+            <p class="text-muted mb-5 mx-auto reveal-zoom delay-200" style="font-size: 1.15rem; line-height: 1.7; max-width: 780px;">
+                The all-in-one AI-powered budget planner and money manager. Track expenses, manage spending, and get intelligent insights — all from your browser, completely free.
+            </p>
+            
+            <div class="d-flex flex-wrap justify-content-center gap-3 mb-5 reveal-zoom delay-300">
+                <a href="{{ url_for('web.register_page') }}" class="btn btn-solid-indigo">
+                    <i class="bi bi-rocket-takeoff"></i> Start Free Now <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="#features" class="btn btn-glass-bordered">
+                    <i class="bi bi-grid-3x3-gap"></i> Explore Features
+                </a>
+                <a href="#faq" class="btn btn-glass-bordered">
+                    <i class="bi bi-question-circle"></i> View FAQs
+                </a>
+            </div>
+
+            <!-- Stats Blocks -->
+            <div class="row g-4 justify-content-center mx-auto reveal-3d delay-400" style="max-width: 800px;">
+                <div class="col-6 col-md-4">
+                    <div class="p-3 border rounded-4 text-center" style="background: rgba(15, 23, 42, 0.4); border-color: var(--glass-border) !important;">
+                        <span style="font-size: 1.1rem; color: #fbbf24;"><i class="bi bi-star-fill"></i></span>
+                        <strong class="stat-counter" data-target="5" data-decimals="1" style="font-size: 1.4rem; color: #fff; display: block; margin-top: 4px;">0</strong>
+                        <small style="color: var(--text-secondary); font-size: 0.8rem;">User Rating</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="p-3 border rounded-4 text-center" style="background: rgba(15, 23, 42, 0.4); border-color: var(--glass-border) !important;">
+                        <span style="font-size: 1.1rem; color: var(--accent-indigo);"><i class="bi bi-globe2"></i></span>
+                        <strong class="stat-counter" data-target="45" data-suffix="+" style="font-size: 1.4rem; color: #fff; display: block; margin-top: 4px;">0</strong>
+                        <small style="color: var(--text-secondary); font-size: 0.8rem;">Languages Supported</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="p-3 border rounded-4 text-center" style="background: rgba(15, 23, 42, 0.4); border-color: var(--glass-border) !important;">
+                        <span style="font-size: 1.1rem; color: #10b981;"><i class="bi bi-shield-fill-check"></i></span>
+                        <strong class="stat-counter" data-target="100" data-suffix="%" style="font-size: 1.4rem; color: #fff; display: block; margin-top: 4px;">0</strong>
+                        <small style="color: var(--text-secondary); font-size: 0.8rem;">Secure Encryption</small>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="container section-grid" id="features">
-        <div class="section-heading">
-            <p class="eyebrow">Platform Capabilities</p>
-            <h2>Everything you need to optimize your cash flow</h2>
+    <!-- Marquee Feature Ticker -->
+    <div class="marquee-track" style="padding: 18px 0; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(15,23,42,0.3);">
+        <div class="marquee-inner">
+            <!-- Set 1 -->
+            <span class="marquee-item"><i class="bi bi-robot"></i>AI Financial Coach</span>
+            <span class="marquee-item"><i class="bi bi-pie-chart-fill"></i>Spending Insights</span>
+            <span class="marquee-item"><i class="bi bi-mic-fill"></i>Voice Transactions</span>
+            <span class="marquee-item"><i class="bi bi-receipt"></i>AI Receipt Scanner</span>
+            <span class="marquee-item"><i class="bi bi-shield-fill-check"></i>Bank-Grade Security</span>
+            <span class="marquee-item"><i class="bi bi-graph-up-arrow"></i>Investment Tracking</span>
+            <span class="marquee-item"><i class="bi bi-bullseye"></i>Smart Goal Setting</span>
+            <span class="marquee-item"><i class="bi bi-people-fill"></i>Family Accounts</span>
+            <span class="marquee-item"><i class="bi bi-globe2"></i>45+ Languages</span>
+            <span class="marquee-item"><i class="bi bi-chat-dots-fill"></i>AI Expert Chat</span>
+            <!-- Set 2 (duplicate for seamless loop) -->
+            <span class="marquee-item"><i class="bi bi-robot"></i>AI Financial Coach</span>
+            <span class="marquee-item"><i class="bi bi-pie-chart-fill"></i>Spending Insights</span>
+            <span class="marquee-item"><i class="bi bi-mic-fill"></i>Voice Transactions</span>
+            <span class="marquee-item"><i class="bi bi-receipt"></i>AI Receipt Scanner</span>
+            <span class="marquee-item"><i class="bi bi-shield-fill-check"></i>Bank-Grade Security</span>
+            <span class="marquee-item"><i class="bi bi-graph-up-arrow"></i>Investment Tracking</span>
+            <span class="marquee-item"><i class="bi bi-bullseye"></i>Smart Goal Setting</span>
+            <span class="marquee-item"><i class="bi bi-people-fill"></i>Family Accounts</span>
+            <span class="marquee-item"><i class="bi bi-globe2"></i>45+ Languages</span>
+            <span class="marquee-item"><i class="bi bi-chat-dots-fill"></i>AI Expert Chat</span>
         </div>
-        {% set features = [
-        ("bi-piggy-bank", "Smart Savings Goals", "Establish custom financial targets, allocate funds, track progress
-        dynamically, and calculate target dates automatically."),
-        ("bi-receipt", "Instant Transaction Parser", "Copy and paste bank alerts, billing notifications, or digital
-        receipts to parse and log entries instantly."),
-        ("bi-pie-chart", "Intuitive Budget Planning", "Set monthly spend limits per category, track utilization rates,
-        and receive custom threshold alerts."),
-        ("bi-graph-up-arrow", "AI Financial Advisory", "Gain proactive insights on savings opportunities, risk
-        detections, and predictive category recommendations."),
-        ("bi-file-earmark-spreadsheet", "Professional Reporting", "Generate and download comprehensive PDF statements,
-        annual income-expense balance sheets, or CSV data."),
-        ("bi-speedometer2", "Unified Net Worth Dashboard", "Monitor cash flow, monthly savings percentages, account
-        balances, and goal progress in real-time.")
-        ] %}
+    </div>
+
+    <!-- Spacer Divider -->
+    <div class="container"><div class="line-spacer"></div></div>
+
+    <!-- Why Choose Section -->
+    <section class="container" id="why-choose" style="padding: 20px 0;">
+        <div class="text-center mb-5 reveal-3d">
+            <h2 style="font-size: clamp(2.2rem, 3.8vw, 3.2rem); font-weight: 800; color: #ffffff; letter-spacing: -0.04em;">
+                Why Choose SmartFinance AI?
+            </h2>
+            <p class="text-muted mx-auto" style="max-width: 600px; font-size: 1.05rem;">
+                Experience the future of personal finance management with cutting-edge AI technology
+            </p>
+        </div>
+
         <div class="row g-4">
-            {% for icon, title, text in features %}
-            <div class="col-md-6 col-xl-4">
-                <article class="feature-tile reveal">
-                    <i class="bi {{ icon }}"
-                        style="transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;"></i>
-                    <h3>{{ title }}</h3>
-                    <p>{{ text }}</p>
+            <div class="col-lg-4 reveal-left delay-100">
+                <article class="feature-card h-100 tilt-card">
+                    <div class="feature-card-icon-container">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <h3>AI Financial Expert</h3>
+                    <p class="mb-4">Get personalized advice tailored to your accounts, budgets, and goals. Your AI coach already understands your full financial picture.</p>
+                    
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Context-aware recommendations</div>
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Investment & savings guidance</div>
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Ask anything — get real answers</div>
                 </article>
             </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    <section class="stats-band">
-        <div class="container">
-            <div class="row g-4 text-center">
-                <div class="col-6 col-lg-3"><strong data-count="99.9">0</strong><span>% Uptime</span></div>
-                <div class="col-6 col-lg-3"><strong data-count="15">0</strong><span>k+ Active Members</span></div>
-                <div class="col-6 col-lg-3"><strong data-count="2.5">0</strong><span>M+ Tracked Transactions</span>
-                </div>
-                <div class="col-6 col-lg-3"><strong data-count="100">0</strong><span>% Secure & Private</span></div>
+            
+            <div class="col-lg-4 reveal delay-200">
+                <article class="feature-card h-100 tilt-card">
+                    <div class="feature-card-icon-container">
+                        <i class="bi bi-pie-chart-fill"></i>
+                    </div>
+                    <h3>Spending Insights</h3>
+                    <p class="mb-4">See exactly where your money goes with clear charts and automatic categorization. Spot trends and make smarter decisions.</p>
+                    
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Automatic categorization</div>
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Monthly trends & comparisons</div>
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Income vs. expenses at a glance</div>
+                </article>
+            </div>
+            
+            <div class="col-lg-4 reveal-right delay-300">
+                <article class="feature-card h-100 tilt-card">
+                    <div class="feature-card-icon-container">
+                        <i class="bi bi-mic-fill"></i>
+                    </div>
+                    <h3>Voice Input Transactions</h3>
+                    <p class="mb-4">Add expenses by voice — just speak and your transaction is logged instantly. No typing, no tapping through forms.</p>
+                    
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Hands-free expense logging</div>
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Natural language — speak freely</div>
+                    <div class="bullet-row"><span class="bullet-icon">›</span> Works in 45+ languages</div>
+                </article>
             </div>
         </div>
     </section>
 
-    <section class="container landing-columns">
-        <div>
-            <p class="eyebrow">User Testimonials</p>
-            <h2>Designed to simplify personal wealth management</h2>
-            <blockquote>“SmartFinance completely transformed how I manage my budget. The AI insights helped me trim
-                unnecessary subscription costs and increase my monthly savings rate by 15%.”</blockquote>
-            <p class="text-muted" style="font-size: 0.9rem; margin-top: -12px;">— Arup K., Senior Product Lead</p>
+    <!-- Spacer Divider -->
+    <div class="container"><div class="line-spacer"></div></div>
+
+    <!-- Everything You Need Section -->
+    <section class="container" id="features" style="padding: 20px 0;">
+        <div class="text-center mb-5 reveal-3d">
+            <h2 style="font-size: clamp(2.2rem, 3.8vw, 3.2rem); font-weight: 800; color: #ffffff; letter-spacing: -0.04em;">
+                Everything You Need for Smart Finance Management
+            </h2>
+            <p class="text-muted mx-auto" style="max-width: 700px; font-size: 1.05rem;">
+                SmartFinance combines all essential financial tools with cutting-edge AI technology to give you complete control over your money.
+            </p>
         </div>
-        <div class="faq-list">
-            <details open>
-                <summary>How secure is my financial data?</summary>
-                <p>We employ secure encryption and strict session protection. Your transaction history and personal data
-                    are stored privately and never shared with third parties.</p>
-            </details>
-            <details>
-                <summary>Can I export my financial reports?</summary>
-                <p>Yes. You can generate custom PDF summaries or export raw transaction tables as CSV files at any time
-                    from your reports dashboard.</p>
-            </details>
-            <details>
-                <summary>How does the AI assistant help me save money?</summary>
-                <p>Our built-in AI assistant analyzes your income and spending patterns to suggest personalized savings strategies, flag unusual expenses, and help you reach your goals faster.</p>
-            </details>
-            <details>
-                <summary>Can I customize my expense categories?</summary>
-                <p>Yes, you can easily create, rename, and assign budgets to custom expense categories to perfectly match your personal spending and saving habits.</p>
-            </details>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-3 reveal-cascade" data-delay="0">
+                <article class="feature-card h-100 tilt-card">
+                    <div class="feature-card-icon-container" style="color: var(--accent-purple); background: rgba(139,92,246,0.08);">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <h3 style="font-size: 1.15rem;">AI Receipt Scanner</h3>
+                    <p style="font-size: 0.88rem;">Automatically scan and categorize receipts with AI-powered OCR technology.</p>
+                </article>
+            </div>
+            <div class="col-md-6 col-lg-3 reveal-cascade" data-delay="120">
+                <article class="feature-card h-100 tilt-card">
+                    <div class="feature-card-icon-container" style="color: var(--accent-blue); background: rgba(59,130,246,0.08);">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <h3 style="font-size: 1.15rem;">AI Bank Statement Input</h3>
+                    <p style="font-size: 0.88rem;">Upload bank statements and let AI automatically extract and categorize transactions.</p>
+                </article>
+            </div>
+            <div class="col-md-6 col-lg-3 reveal-cascade" data-delay="240">
+                <article class="feature-card h-100 tilt-card">
+                    <div class="feature-card-icon-container">
+                        <i class="bi bi-chat-dots-fill"></i>
+                    </div>
+                    <h3 style="font-size: 1.15rem;">AI Expert Chat</h3>
+                    <p style="font-size: 0.88rem;">Like having a financial advisor in your pocket — one who actually knows your numbers.</p>
+                </article>
+            </div>
+            <div class="col-md-6 col-lg-3 reveal-cascade" data-delay="360">
+                <article class="feature-card h-100 tilt-card">
+                    <div class="feature-card-icon-container" style="color: var(--accent-purple); background: rgba(139,92,246,0.08);">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h3 style="font-size: 1.15rem;">Family Accounts</h3>
+                    <p style="font-size: 0.88rem;">Manage family finances together with shared budgets, goals, and spending tracking.</p>
+                </article>
+            </div>
+        </div>
+
+        <div class="text-center reveal-zoom delay-500">
+            <a href="{{ url_for('web.register_page') }}" class="btn btn-solid-indigo px-4">
+                <i class="bi bi-people"></i> Try All Features Now <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
     </section>
 
-    <footer class="landing-footer">
-        <div class="container d-flex flex-wrap justify-content-between gap-3">
-            <span>© 2026 SmartFinance Inc. All rights reserved.</span>
-            <a href="mailto:support@smartfinance.com">support@smartfinance.com</a>
+    <!-- Spacer Divider -->
+    <div class="container"><div class="line-spacer"></div></div>
+
+    <!-- Manage Anywhere Section -->
+    <section class="container" style="padding: 20px 0;">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 reveal-left">
+                <span class="badge rounded-pill px-3 py-2 mb-3 badge-pill-accent reveal-left delay-100" style="background: rgba(99,102,241,0.05); border-color: rgba(99,102,241,0.15);">
+                    Mobile & Web Experience
+                </span>
+                <h2 class="reveal-left delay-200" style="font-size: clamp(2.2rem, 3.8vw, 3.2rem); font-weight: 800; color: #ffffff; letter-spacing: -0.04em; line-height: 1.1;">
+                    Manage Your Finances<br><span class="gradient-blue-text">Anywhere, Anytime</span>
+                </h2>
+                <p class="text-muted my-4 reveal-left delay-300" style="font-size: 1.05rem; line-height: 1.6;">
+                    Access your financial dashboard from any device. Our responsive design ensures a seamless experience whether you're on desktop, tablet, or mobile.
+                </p>
+                
+                <div class="d-flex flex-column gap-3 mb-4">
+                    <div class="d-flex align-items-center gap-3 reveal-left delay-400">
+                        <span style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: var(--accent-blue);"><i class="bi bi-graph-up-arrow"></i></span>
+                        <strong style="color: #fff; font-size: 1.05rem;">Real-time expense tracking</strong>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 reveal-left delay-500">
+                        <span style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: var(--accent-indigo);"><i class="bi bi-bullseye"></i></span>
+                        <strong style="color: #fff; font-size: 1.05rem;">Intelligent goal setting</strong>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 reveal-left delay-500">
+                        <span style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.15); width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: var(--accent-purple);"><i class="bi bi-people-fill"></i></span>
+                        <strong style="color: #fff; font-size: 1.05rem;">Family financial planning</strong>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('web.register_page') }}" class="btn btn-solid-indigo px-4 reveal-left delay-500">
+                    Get Started Now <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Device Mockups Visual -->
+            <div class="col-lg-6 reveal-right">
+                <div class="iphone-mockup-container">
+                    <div class="iphone-mockup-tilt-wrapper">
+                        <div class="iphone-mockup-frame">
+                        <div class="iphone-dynamic-island"></div>
+                        <div class="iphone-mockup-screen">
+                            <div>
+                                <!-- Status Bar -->
+                                <div class="iphone-status-bar">
+                                    <span>9:41</span>
+                                    <span>100%</span>
+                                </div>
+
+                                <!-- Profile bar -->
+                                <div class="iphone-profile-bar">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="iphone-avatar">
+                                            <span class="fw-bold text-white" style="font-size: 0.65rem;">AD</span>
+                                        </div>
+                                        <div class="d-flex flex-column text-start">
+                                            <span style="font-size: 0.78rem; font-weight: 700; color: #ffffff; line-height: 1.1;">Hey, Alex!</span>
+                                            <span style="font-size: 0.58rem; color: #64748b;">Free Account</span>
+                                        </div>
+                                    </div>
+                                    <div class="iphone-bell-btn">
+                                        <i class="bi bi-bell"></i>
+                                        <span class="iphone-bell-dot"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Balance card with sparkline graph -->
+                                <div class="iphone-balance-card">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <div class="text-start">
+                                            <span style="font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Net Worth</span>
+                                            <h3 style="font-size: 1.15rem; font-weight: 800; color: #ffffff; margin: 1px 0 0 0;">$24,850.00</h3>
+                                        </div>
+                                        <span class="iphone-trend-badge"><i class="bi bi-arrow-up-short"></i>12.4%</span>
+                                    </div>
+                                    <div class="iphone-sparkline-container">
+                                        <svg viewBox="0 0 200 45" class="iphone-sparkline">
+                                            <defs>
+                                                <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stop-color="var(--accent-blue)" stop-opacity="0.25"/>
+                                                    <stop offset="100%" stop-color="var(--accent-blue)" stop-opacity="0"/>
+                                                </linearGradient>
+                                            </defs>
+                                            <path d="M 0 45 Q 25 35 50 40 T 100 20 T 150 15 T 200 5 L 200 45 Z" fill="url(#sparklineGrad)"></path>
+                                            <path d="M 0 45 Q 25 35 50 40 T 100 20 T 150 15 T 200 5" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" stroke-linecap="round"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Flow Cards (Income vs Expenses) -->
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <div class="iphone-flow-card">
+                                            <div class="iphone-flow-icon income"><i class="bi bi-arrow-up-right"></i></div>
+                                            <div class="text-start">
+                                                <span class="iphone-flow-label">Income</span>
+                                                <span class="iphone-flow-amount income">+$5.2k</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="iphone-flow-card">
+                                            <div class="iphone-flow-icon expense"><i class="bi bi-arrow-down-left"></i></div>
+                                            <div class="text-start">
+                                                <span class="iphone-flow-label">Expenses</span>
+                                                <span class="iphone-flow-amount expense">-$3.8k</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Analytics Trend Chart (SVG Curve) -->
+                                <div class="iphone-chart-section">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span style="font-size: 0.68rem; font-weight: 700; color: #ffffff;">Analytics Trend</span>
+                                        <span style="font-size: 0.58rem; color: #64748b;">This Month</span>
+                                    </div>
+                                    <div class="iphone-area-chart-container">
+                                        <svg viewBox="0 0 240 100" class="iphone-area-chart">
+                                            <defs>
+                                                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stop-color="var(--accent-indigo)" stop-opacity="0.3"/>
+                                                    <stop offset="50%" stop-color="var(--accent-purple)" stop-opacity="0.15"/>
+                                                    <stop offset="100%" stop-color="var(--accent-purple)" stop-opacity="0"/>
+                                                </linearGradient>
+                                            </defs>
+                                            <line x1="0" y1="20" x2="240" y2="20" stroke="rgba(255,255,255,0.03)" stroke-width="1"></line>
+                                            <line x1="0" y1="50" x2="240" y2="50" stroke="rgba(255,255,255,0.03)" stroke-width="1"></line>
+                                            <line x1="0" y1="80" x2="240" y2="80" stroke="rgba(255,255,255,0.03)" stroke-width="1"></line>
+                                            <path d="M 0 90 C 30 75, 50 85, 80 45 C 110 5, 130 50, 160 30 C 190 10, 210 25, 240 15 L 240 100 L 0 100 Z" fill="url(#areaGrad)"></path>
+                                            <path d="M 0 90 C 30 75, 50 85, 80 45 C 110 5, 130 50, 160 30 C 190 10, 210 25, 240 15" fill="none" stroke="var(--accent-indigo)" stroke-width="3" stroke-linecap="round"></path>
+                                            <circle cx="80" cy="45" r="4" fill="var(--accent-indigo)" stroke="#ffffff" stroke-width="1.5"></circle>
+                                            <circle cx="160" cy="30" r="4" fill="var(--accent-blue)" stroke="#ffffff" stroke-width="1.5"></circle>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Category Budget Progress -->
+                                <div class="iphone-categories-list">
+                                    <div class="iphone-category-item">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="iphone-cat-icon food"><i class="bi bi-egg-fried"></i></div>
+                                                <span class="iphone-cat-title">Food & Dining</span>
+                                            </div>
+                                            <span class="iphone-cat-spent">$420 of $800</span>
+                                        </div>
+                                        <div class="iphone-cat-progress">
+                                            <div class="iphone-cat-progress-fill food" style="--target-width: 52.5%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Simulated App Navigation -->
+                            <div class="iphone-nav-bar">
+                                <div class="iphone-nav-item active"><i class="bi bi-house-door-fill"></i></div>
+                                <div class="iphone-nav-item"><i class="bi bi-graph-up"></i></div>
+                                <div class="iphone-nav-item chat-btn"><i class="bi bi-chat-dots-fill"></i></div>
+                                <div class="iphone-nav-item"><i class="bi bi-gear-fill"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Spacer Divider -->
+    <div class="container"><div class="line-spacer"></div></div>
+
+    <!-- FAQs accordion Section -->
+    <section class="container reveal" style="padding-bottom: 90px;" id="faq">
+        <div class="text-center mb-5">
+            <span class="badge rounded-pill px-3 py-2 mb-3 badge-pill-accent" style="background: rgba(99,102,241,0.05); border-color: rgba(99,102,241,0.15);">
+                FAQ
+            </span>
+            <h2 style="font-size: clamp(2.2rem, 3.8vw, 3.2rem); font-weight: 800; color: #ffffff; letter-spacing: -0.04em;">
+                Frequently Asked Questions
+            </h2>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="faq-container-card">
+                    <div class="faq-item reveal delay-100">
+                        <div class="faq-header w-100 d-flex justify-content-between align-items-center border-0 bg-transparent text-start text-white p-0">
+                            <span>What is the best AI budgeting app?</span>
+                            <i class="bi bi-chevron-down faq-chevron"></i>
+                        </div>
+                        <div class="faq-body">
+                            <p>SmartFinance is an AI-powered budgeting app that combines expense tracking, budget planning, receipt scanning, voice input, and an AI financial expert chat. It is fully web-based and completely free to use.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item reveal delay-200">
+                        <div class="faq-header w-100 d-flex justify-content-between align-items-center border-0 bg-transparent text-start text-white p-0">
+                            <span>Is SmartFinance a good Mint alternative?</span>
+                            <i class="bi bi-chevron-down faq-chevron"></i>
+                        </div>
+                        <div class="faq-body">
+                            <p>Yes, SmartFinance is a great Mint alternative. Since Mint shut down, many users have switched to SmartFinance to manage their spending, set budgets, and use AI features to get personalized recommendations and answers about their money.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item reveal delay-300">
+                        <div class="faq-header w-100 d-flex justify-content-between align-items-center border-0 bg-transparent text-start text-white p-0">
+                            <span>How much does SmartFinance cost?</span>
+                            <i class="bi bi-chevron-down faq-chevron"></i>
+                        </div>
+                        <div class="faq-body">
+                            <p>SmartFinance is completely free! You get full access to all features including transaction tracking, smart budgets, AI voice input, receipt scanning, and bank statement parsing without any hidden charges or subscription plans.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item reveal delay-400">
+                        <div class="faq-header w-100 d-flex justify-content-between align-items-center border-0 bg-transparent text-start text-white p-0">
+                            <span>Does SmartFinance work on all devices?</span>
+                            <i class="bi bi-chevron-down faq-chevron"></i>
+                        </div>
+                        <div class="faq-body">
+                            <p>Yes, SmartFinance is a fully web-based application that works on any modern browser — desktop, laptop, tablet, or mobile browser. No app download required. Just sign up and start managing your finances instantly.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item reveal delay-500">
+                        <div class="faq-header w-100 d-flex justify-content-between align-items-center border-0 bg-transparent text-start text-white p-0">
+                            <span>Is my financial data secure?</span>
+                            <i class="bi bi-chevron-down faq-chevron"></i>
+                        </div>
+                        <div class="faq-body">
+                            <p>Security is our top priority. We use bank-level encryption (AES-256) to protect your financial logs. Your login sessions are protected with industry-standard authentication systems, and we never sell your data.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item reveal delay-500">
+                        <div class="faq-header w-100 d-flex justify-content-between align-items-center border-0 bg-transparent text-start text-white p-0">
+                            <span>What AI features does SmartFinance offer?</span>
+                            <i class="bi bi-chevron-down faq-chevron"></i>
+                        </div>
+                        <div class="faq-body">
+                            <p>SmartFinance offers real-time voice command parsing, automatic PDF bank statement transaction extraction, visual category analytics, and a conversational AI finance coach powered by Gemini.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4 text-muted" style="font-size: 0.9rem;">
+                    Looking for a Mint alternative or comparing budgeting apps? <a href="{{ url_for('web.register_page') }}" style="color: var(--accent-indigo); font-weight: 600; text-decoration: none;">See our full comparison</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Spacer Divider -->
+    <div class="container"><div class="line-spacer"></div></div>
+
+    <!-- Ready to Transform CTA Section -->
+    <section class="container reveal text-center" style="padding-bottom: 90px;">
+        <div class="p-5 border rounded-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.4), rgba(15, 23, 42, 0.45)); border-color: rgba(99, 102, 241, 0.18) !important; box-shadow: 0 0 40px rgba(99, 102, 241, 0.08);">
+            <div class="position-absolute" style="width: 250px; height: 250px; border-radius: 50%; background: var(--accent-indigo); filter: blur(100px); top: -100px; left: -100px; opacity: 0.15; pointer-events: none;"></div>
+            <div class="position-absolute" style="width: 250px; height: 250px; border-radius: 50%; background: var(--accent-purple); filter: blur(100px); bottom: -100px; right: -100px; opacity: 0.15; pointer-events: none;"></div>
+            
+            <h2 class="mb-3 text-white fw-bold" style="font-size: 2.3rem; letter-spacing: -0.04em;">Ready to Transform Your Financial Future?</h2>
+            <p class="text-muted mb-4 mx-auto" style="max-width: 600px; font-size: 1.05rem;">Experience the future of personal finance management with cutting-edge AI technology.</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{{ url_for('web.register_page') }}" class="btn btn-solid-indigo px-4">
+                    <i class="bi bi-rocket-takeoff"></i> Start Your Journey Now <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Glass Footer -->
+    <footer class="saas-footer" style="background: rgba(3, 7, 18, 0.5); border-top: 1px solid var(--glass-border); padding: 60px 0 40px;">
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <div class="col-lg-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span style="background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple)); width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem;"><i class="bi bi-wallet2 text-white"></i></span>
+                        <span class="text-white fw-bold" style="font-size: 1.15rem; letter-spacing: -0.5px;">SmartFinance</span>
+                    </div>
+                    <p class="text-muted" style="max-width: 380px; font-size: 0.9rem; line-height: 1.6;">
+                        Your intelligent financial companion, powered by AI to help you make smarter money decisions.
+                    </p>
+                </div>
+                
+                <div class="col-6 col-lg-3">
+                    <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 20px;">Product</strong>
+                    <div class="d-flex flex-column gap-2.5" style="font-size: 0.88rem;">
+                        <a href="#features">Features</a>
+                        <a href="#faq">FAQs</a>
+                        <a href="#features">AI Tools</a>
+                        <a href="#features">Security</a>
+                        <a href="#features">Browser Access</a>
+                    </div>
+                </div>
+                
+                <div class="col-6 col-lg-3">
+                    <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 20px;">Company</strong>
+                    <div class="d-flex flex-column gap-2.5" style="font-size: 0.88rem;">
+                        <a href="#features">About Us</a>
+                        <a href="mailto:support@smartfinance.com">Contact</a>
+                        <a href="#faq">Privacy Policy</a>
+                        <a href="#faq">Terms of Service</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-top pt-4 d-flex flex-wrap justify-content-between align-items-center gap-3" style="border-color: rgba(255,255,255,0.05) !important; font-size: 0.85rem;">
+                <span class="text-muted">&copy; 2026 SmartFinance. All rights reserved.</span>
+                <span class="text-muted"><i class="bi bi-shield-fill-check" style="color: var(--accent-indigo); font-size: 0.95rem;"></i> Bank-level encryption</span>
+            </div>
         </div>
     </footer>
-</main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Sticky Navigation Header Scroll Effect
+    const navbar = document.getElementById("landingNav");
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 40) {
+            navbar?.classList.add("scrolled");
+        } else {
+            navbar?.classList.remove("scrolled");
+        }
+    });
+
+    // 2. Cursor Spotlight Hover Effect on Feature Cards
+    const spotlightCards = document.querySelectorAll(".feature-card");
+    spotlightCards.forEach(card => {
+        card.addEventListener("mousemove", (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty("--mouse-x", `${x}px`);
+            card.style.setProperty("--mouse-y", `${y}px`);
+        });
+    });
+
+    // 3. Custom Language Selector Dropdown Interaction
+    const langItems = document.querySelectorAll(".btn-lang-item");
+    const langText = document.querySelector("#langBtn span");
+    langItems.forEach(item => {
+        item.addEventListener("click", () => {
+            langItems.forEach(el => el.classList.remove("active"));
+            item.classList.add("active");
+            
+            const selectedLanguage = item.textContent.trim();
+            if (langText) langText.textContent = selectedLanguage.split(" ")[0]; // Just the name (e.g. English, Hindi)
+            
+            if (typeof toast === "function") {
+                toast(`Language updated to: ${selectedLanguage}`);
+            }
+        });
+    });
+
+    // 4. Custom FAQ Accordion Toggles (Smooth Height Transitions)
+    const faqHeaders = document.querySelectorAll(".faq-header");
+    faqHeaders.forEach(header => {
+        header.addEventListener("click", () => {
+            const item = header.closest(".faq-item");
+            const body = item.querySelector(".faq-body");
+            const isOpen = item.classList.contains("open");
+            
+            // Collapse all other accordion items
+            document.querySelectorAll(".faq-item").forEach(other => {
+                if (other !== item && other.classList.contains("open")) {
+                    other.classList.remove("open");
+                    other.querySelector(".faq-body").style.maxHeight = "0";
+                    other.style.borderColor = "var(--glass-border)";
+                }
+            });
+            
+            if (isOpen) {
+                item.classList.remove("open");
+                body.style.maxHeight = "0";
+                item.style.borderColor = "var(--glass-border)";
+            } else {
+                item.classList.add("open");
+                body.style.maxHeight = body.scrollHeight + "px";
+                item.style.borderColor = "var(--accent-indigo)";
+            }
+        });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // 5. REPEATABLE Scroll Reveal Engine — ALL variants
+    //    reveal / reveal-left / reveal-right / reveal-3d /
+    //    reveal-zoom / reveal-scale / reveal-cascade
+    // ═══════════════════════════════════════════════════════════════
+    const allRevealSelectors = ".reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-zoom, .reveal-3d";
+    const reveals = document.querySelectorAll(allRevealSelectors);
+
+    if ('IntersectionObserver' in window) {
+        const observerOptions = {
+            root: null,
+            rootMargin: '-40px 0px -40px 0px',   // 40px buffer so it triggers slightly after edge
+            threshold: 0.08
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Element entered viewport — animate IN
+                    entry.target.classList.add("active");
+                } else {
+                    // Element left viewport — RESET so it replays next time
+                    entry.target.classList.remove("active");
+                }
+            });
+        }, observerOptions);
+
+        reveals.forEach(el => revealObserver.observe(el));
+    } else {
+        // Fallback for browsers without IntersectionObserver
+        reveals.forEach(el => el.classList.add("active"));
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // 6. reveal-3d observer
+    // ══════════════════════════════════════════════════════════
+    const reveals3d = document.querySelectorAll(".reveal-3d");
+    reveals3d.forEach(el => {
+        if ('IntersectionObserver' in window) {
+            const obs = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) e.target.classList.add("active");
+                    else e.target.classList.remove("active");
+                });
+            }, { threshold: 0.08, rootMargin: '-40px 0px -40px 0px' });
+            obs.observe(el);
+        } else { el.classList.add("active"); }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    // 7. reveal-zoom observer
+    // ══════════════════════════════════════════════════════════
+    document.querySelectorAll(".reveal-zoom").forEach(el => {
+        if ('IntersectionObserver' in window) {
+            const obs = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) e.target.classList.add("active");
+                    else e.target.classList.remove("active");
+                });
+            }, { threshold: 0.06, rootMargin: '-30px 0px -30px 0px' });
+            obs.observe(el);
+        } else { el.classList.add("active"); }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    // 8. STAGGERED CASCADE CARDS — each card gets its own delay
+    //    from data-delay attribute (ms), so they fan in one-by-one
+    // ══════════════════════════════════════════════════════════
+    const cascadeCards = document.querySelectorAll(".reveal-cascade");
+    if (cascadeCards.length && 'IntersectionObserver' in window) {
+        const cascadeObs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const delay = parseInt(entry.target.dataset.delay || 0);
+                if (entry.isIntersecting) {
+                    entry.target.style.transitionDelay = delay + "ms";
+                    entry.target.classList.add("active");
+                } else {
+                    entry.target.style.transitionDelay = "0ms";
+                    entry.target.classList.remove("active");
+                }
+            });
+        }, { threshold: 0.06, rootMargin: '-20px 0px -20px 0px' });
+        cascadeCards.forEach(el => cascadeObs.observe(el));
+    } else {
+        cascadeCards.forEach(el => el.classList.add("active"));
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // 9. ANIMATED STAT COUNTERS — count up on scroll-in
+    //    Resets to 0 when element leaves, replays on re-enter
+    // ══════════════════════════════════════════════════════════
+    const counters = document.querySelectorAll(".stat-counter");
+    counters.forEach(counter => {
+        const target  = parseFloat(counter.dataset.target || 0);
+        const suffix  = counter.dataset.suffix  || "";
+        const decimals = parseInt(counter.dataset.decimals || 0);
+        let animFrame = null;
+
+        function animateCount(start, end, duration) {
+            const startTs = performance.now();
+            function step(ts) {
+                const progress = Math.min((ts - startTs) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                const current = start + (end - start) * eased;
+                counter.textContent = current.toFixed(decimals) + suffix;
+                if (progress < 1) animFrame = requestAnimationFrame(step);
+            }
+            animFrame = requestAnimationFrame(step);
+        }
+
+        if ('IntersectionObserver' in window) {
+            const obs = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        animateCount(0, target, 1800);
+                    } else {
+                        if (animFrame) cancelAnimationFrame(animFrame);
+                        counter.textContent = "0" + suffix;
+                    }
+                });
+            }, { threshold: 0.5 });
+            obs.observe(counter);
+        } else {
+            counter.textContent = target.toFixed(decimals) + suffix;
+        }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    // 10. CIRCULAR SCROLL PROGRESS + SQUARE BORDER PROGRESS
+    // ══════════════════════════════════════════════════════════
+    const scrollWidget = document.getElementById('scrollWidget');
+    const arcCircle    = document.getElementById('arcCircle');
+    const pctText      = document.querySelector('#scrollPct .pct-text');
+    const CIRCUMFERENCE = 138.2;
+
+    // Square border rect setup
+    const sqRect = document.getElementById('sqRect');
+    const sqSvg  = document.getElementById('squareBorderProgress');
+    let sqPerimeter = 0;
+
+    function setupSquareRect() {
+        if (!sqRect || !sqSvg) return;
+        const W = document.documentElement.clientWidth; // Excludes the vertical scrollbar width
+        const H = window.innerHeight;
+        sqSvg.setAttribute('width', W);
+        sqSvg.setAttribute('height', H);
+        sqSvg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+        
+        const padding = 12; // Inset padding so the progress frame floats elegantly inside window boundaries
+        sqRect.setAttribute('x', padding);
+        sqRect.setAttribute('y', padding);
+        sqRect.setAttribute('width', W - (padding * 2));
+        sqRect.setAttribute('height', H - (padding * 2));
+        sqPerimeter = 2 * (W - (padding * 2)) + 2 * (H - (padding * 2));
+        sqRect.setAttribute('stroke-dasharray', sqPerimeter);
+        sqRect.setAttribute('stroke-dashoffset', sqPerimeter);
+    }
+    setupSquareRect();
+    window.addEventListener('resize', setupSquareRect);
+
+    function updateScrollProgress() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct       = docHeight > 0 ? scrollTop / docHeight : 0;
+
+        // Circular arc
+        if (arcCircle) {
+            arcCircle.style.strokeDashoffset = (CIRCUMFERENCE * (1 - pct)).toFixed(2);
+        }
+        if (pctText) pctText.textContent = Math.round(pct * 100) + '%';
+        if (scrollWidget) {
+            if (pct > 0.02) scrollWidget.classList.add('visible');
+            else            scrollWidget.classList.remove('visible');
+        }
+
+        // Square border
+        if (sqRect && sqPerimeter > 0) {
+            sqRect.setAttribute('stroke-dashoffset', (sqPerimeter * (1 - pct)).toFixed(2));
+        }
+    }
+    window.addEventListener('scroll', updateScrollProgress, { passive: true });
+    if (scrollWidget) {
+        scrollWidget.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+
+});
+
+// ══════════════════════════════════════════════════════════════
+// 7. ANIMATED PARTICLE NETWORK CANVAS
+//    Draws 80 floating particles. Lines appear between close ones.
+//    Mouse proximity repels nearby particles.
+// ══════════════════════════════════════════════════════════════
+(function() {
+    const canvas = document.getElementById('particle-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [], mouse = { x: -9999, y: -9999 };
+    const COUNT = 80, LINK_DIST = 130, REPEL_DIST = 100, REPEL_FORCE = 0.6;
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    function createParticle() {
+        return {
+            x: rand(0, W), y: rand(0, H),
+            vx: rand(-0.25, 0.25), vy: rand(-0.25, 0.25),
+            r: rand(1.2, 2.5),
+            alpha: rand(0.3, 0.85),
+            color: Math.random() > 0.5 ? '99,102,241' : '139,92,246'
+        };
+    }
+    for (let i = 0; i < COUNT; i++) particles.push(createParticle());
+
+    document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    document.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Update + repel
+        particles.forEach(p => {
+            const dx = p.x - mouse.x, dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < REPEL_DIST && dist > 0) {
+                const force = (REPEL_DIST - dist) / REPEL_DIST * REPEL_FORCE;
+                p.vx += (dx / dist) * force;
+                p.vy += (dy / dist) * force;
+            }
+            // Damping
+            p.vx *= 0.99; p.vy *= 0.99;
+            p.x += p.vx; p.y += p.vy;
+            // Wrap
+            if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+            if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        });
+
+        // Draw links
+        for (let i = 0; i < COUNT; i++) {
+            for (let j = i + 1; j < COUNT; j++) {
+                const a = particles[i], b = particles[j];
+                const dx = a.x - b.x, dy = a.y - b.y;
+                const d = Math.sqrt(dx*dx + dy*dy);
+                if (d < LINK_DIST) {
+                    const lineAlpha = (1 - d / LINK_DIST) * 0.25;
+                    ctx.strokeStyle = `rgba(99,102,241,${lineAlpha})`;
+                    ctx.lineWidth = 0.8;
+                    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+                }
+            }
+        }
+
+        // Draw particles
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+            ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+
+
+// ══════════════════════════════════════════════════════════════
+// 9. 3D MAGNETIC CARD TILT — Real perspective rotation
+//    Cards rotate on X/Y axis following mouse position
+// ══════════════════════════════════════════════════════════════
+(function() {
+    const TILT_MAX = 14;   // max degrees of tilt
+    const SCALE    = 1.04; // subtle zoom on hover
+
+    document.querySelectorAll('.tilt-card').forEach(card => {
+        card.style.transition = 'transform 0.15s ease, box-shadow 0.3s ease, border-color 0.3s ease';
+        card.style.willChange = 'transform';
+
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const cx = rect.left + rect.width  / 2;
+            const cy = rect.top  + rect.height / 2;
+            const dx = (e.clientX - cx) / (rect.width  / 2);  // -1 to +1
+            const dy = (e.clientY - cy) / (rect.height / 2);  // -1 to +1
+            const rotX = -dy * TILT_MAX;   // tilt up/down
+            const rotY =  dx * TILT_MAX;   // tilt left/right
+
+            card.style.transform =
+                `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(${SCALE},${SCALE},${SCALE})`;
+            card.style.boxShadow =
+                `${-dx*18}px ${-dy*18}px 50px rgba(99,102,241,0.18), 0 25px 50px rgba(0,0,0,0.5)`;
+
+            // Shift inner glow to follow cursor
+            card.style.setProperty('--mouse-x', e.clientX - rect.left + 'px');
+            card.style.setProperty('--mouse-y', e.clientY - rect.top  + 'px');
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform  = 'perspective(900px) rotateX(0) rotateY(0) scale3d(1,1,1)';
+            card.style.boxShadow  = '';
+        });
+    });
+})();
+
+// ══════════════════════════════════════════════════════════════
+// 10. PARALLAX NEON BLOBS on scroll
+// ══════════════════════════════════════════════════════════════
+(function() {
+    const blob1 = document.querySelector('.neon-blob-1');
+    const blob2 = document.querySelector('.neon-blob-2');
+    const blob3 = document.querySelector('.neon-blob-3');
+    if (!blob1) return;
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                const sy = window.scrollY;
+                if (blob1) blob1.style.transform = `translate(${sy * 0.04}px, ${sy * -0.06}px) scale(1)`;
+                if (blob2) blob2.style.transform = `translate(${sy * -0.05}px, ${sy * 0.04}px) scale(1)`;
+                if (blob3) blob3.style.transform = `translate(${sy * 0.03}px, ${sy * 0.05}px) scale(1)`;
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+})();
+</script>
 {% endblock %}

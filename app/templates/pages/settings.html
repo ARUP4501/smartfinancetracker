@@ -4,102 +4,336 @@
 {% block page_subtitle %}Manage your profile, preferences, security, and custom categories{% endblock %}
 
 {% block page_content %}
-<!-- Settings layout grid -->
-<div class="row g-4 mt-1">
-    <!-- Left Column: Settings List -->
-    <div class="col-lg-6">
-        <div class="panel p-4 border rounded-3 h-100" style="background: var(--surface); border-color: var(--line) !important;">
-            <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
-                <h3 class="fw-bold mb-0" style="font-size: 1.25rem;"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>System & Account Settings</h3>
+<!-- Settings main tabs navigation -->
+<ul class="nav nav-tabs border-bottom mb-4" id="settingsMainTabs" style="border-color: var(--line) !important; padding-left: 5px;">
+    <li class="nav-item">
+        <button class="nav-link active bg-transparent border-0 pb-2 fw-bold" id="accountTabBtn" type="button" style="border-bottom: 2px solid var(--accent) !important; color: var(--text); font-size: 1.05rem; padding: 8px 20px;">
+            <i class="bi bi-person-gear me-2"></i>Account & Security
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link bg-transparent border-0 pb-2" id="categoriesTabBtn" type="button" style="color: var(--muted); font-size: 1.05rem; padding: 8px 20px;">
+            <i class="bi bi-tags me-2"></i>Manage Categories
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link bg-transparent border-0 pb-2" id="helpTabBtn" type="button" style="color: var(--muted); font-size: 1.05rem; padding: 8px 20px;">
+            <i class="bi bi-question-circle me-2"></i>Help & Support
+        </button>
+    </li>
+</ul>
+
+<!-- Tab 1: Account Settings Pane -->
+<div id="accountTabPane" class="settings-tab-pane">
+    <div class="row g-4">
+        <!-- Left Column: Settings List -->
+        <div class="col-lg-6">
+            <div class="panel p-4 border rounded-3 h-100" style="background: var(--surface); border-color: var(--line) !important;">
+                <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem;"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>System & Account Settings</h3>
+                </div>
+                
+                <div class="d-flex flex-column gap-3">
+                    <!-- Profile Settings Row -->
+                    <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenProfileModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon blue" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-person-fill"></i></span>
+                            <div>
+                                <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Profile Details</strong>
+                                <small class="text-muted" style="font-size: 0.82rem;">Update name and select your profession (Current: {{ claims.get('profession', 'Salaried') }})</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-5"></i>
+                    </div>
+
+                    <!-- Security / Change Password Row -->
+                    <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenPasswordModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon rose" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-shield-lock-fill"></i></span>
+                            <div>
+                                <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Security Settings</strong>
+                                <small class="text-muted" style="font-size: 0.82rem;">Manage your password and secure your account</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-5"></i>
+                    </div>
+
+                    <!-- Currency & Payment Settings Row -->
+                    <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenCurrencyModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon green" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-currency-exchange"></i></span>
+                            <div>
+                                <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Currency & Wallet</strong>
+                                <small class="text-muted" style="font-size: 0.82rem;">Set primary currency (Current: {{ claims.get('currency', '₹') }}) and default payment mode</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-5"></i>
+                    </div>
+
+                    <!-- Budget Limits & Warnings Row -->
+                    <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenBudgetModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon orange" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-bell-fill"></i></span>
+                            <div>
+                                <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Budget Threshold Alerts</strong>
+                                <small class="text-muted" style="font-size: 0.82rem;">Change alert limit (Current: {{ claims.get('budget_warning_threshold', 80) }}% usage warning)</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-5"></i>
+                    </div>
+
+                    <!-- AI Tone Row -->
+                    <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenAiModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon violet" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-stars"></i></span>
+                            <div>
+                                <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">AI Advisor Persona</strong>
+                                <small class="text-muted" style="font-size: 0.82rem;">Configure advisor chatbot response tone (Current: {{ claims.get('ai_tone', 'Professional') }})</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-5"></i>
+                    </div>
+
+                    <!-- Notification Preferences Row -->
+                    <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenNotificationModal">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon blue" style="width: 40px; height: 40px; font-size: 1.15rem; background: var(--blue) !important; color: #fff;"><i class="bi bi-bell"></i></span>
+                            <div>
+                                <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Notification Preferences</strong>
+                                <small class="text-muted" style="font-size: 0.82rem;">Manage system alerts, email digests, and warning notifications</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-5"></i>
+                    </div>
+                </div>
             </div>
-            
-            <div class="d-flex flex-column gap-3">
-                <!-- Profile Settings Row -->
-                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenProfileModal">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="mini-icon blue" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-person-fill"></i></span>
-                        <div>
-                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Profile Details</strong>
-                            <small class="text-muted" style="font-size: 0.82rem;">Update name and select your profession (Current: {{ claims.get('profession', 'Salaried') }})</small>
-                        </div>
-                    </div>
-                    <i class="bi bi-chevron-right text-muted fs-5"></i>
-                </div>
+        </div>
 
-                <!-- Security / Change Password Row -->
-                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenPasswordModal">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="mini-icon rose" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-shield-lock-fill"></i></span>
-                        <div>
-                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Security Settings</strong>
-                            <small class="text-muted" style="font-size: 0.82rem;">Manage your password and secure your account</small>
-                        </div>
-                    </div>
-                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+        <!-- Right Column: Inline Security & Danger Zone -->
+        <div class="col-lg-6 d-flex flex-column gap-4">
+            <!-- Security / Change Password Panel -->
+            <div class="panel p-4 border rounded-3" style="background: var(--surface); border-color: var(--line) !important; flex: 1;">
+                <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem; color: var(--text);"><i class="bi bi-lock me-2"></i>Security</h3>
                 </div>
-
-                <!-- Currency & Payment Settings Row -->
-                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenCurrencyModal">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="mini-icon green" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-currency-exchange"></i></span>
-                        <div>
-                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Currency & Wallet</strong>
-                            <small class="text-muted" style="font-size: 0.82rem;">Set primary currency (Current: {{ claims.get('currency', '₹') }}) and default payment mode</small>
-                        </div>
+                
+                <form id="inlineChangePasswordForm" class="stack-form">
+                    <h4 class="fw-bold mb-3" style="font-size: 1.05rem; color: var(--text);">Change Password</h4>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">New Password</label>
+                        <input type="password" id="inlineNewPasswordInput" class="form-control" placeholder="Minimum 6 characters" required style="background: var(--bg); border-color: var(--line); color: var(--text);">
                     </div>
-                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Confirm Password</label>
+                        <input type="password" id="inlineConfirmPasswordInput" class="form-control" placeholder="Repeat new password" required style="background: var(--bg); border-color: var(--line); color: var(--text);">
+                    </div>
+                    
+                    <button class="btn btn-primary d-flex align-items-center gap-2" type="submit" style="background: var(--accent-2); border: 0; padding: 10px 20px; font-weight: 600;">
+                        <i class="bi bi-lock-fill"></i> Change Password
+                    </button>
+                </form>
+            </div>
+
+            <!-- Danger Zone Panel -->
+            <div class="panel p-4 border rounded-3" style="background: rgba(239, 68, 68, 0.04); border-color: rgba(239, 68, 68, 0.28) !important;">
+                <div class="panel-head border-bottom pb-3 mb-3" style="border-color: rgba(239, 68, 68, 0.2) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem; color: #ef4444;"><i class="bi bi-exclamation-triangle me-2"></i>Danger Zone</h3>
                 </div>
-
-                <!-- Budget Limits & Warnings Row -->
-                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenBudgetModal">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="mini-icon orange" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-bell-fill"></i></span>
-                        <div>
-                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">Budget Threshold Alerts</strong>
-                            <small class="text-muted" style="font-size: 0.82rem;">Change alert limit (Current: {{ claims.get('budget_warning_threshold', 80) }}% usage warning)</small>
-                        </div>
-                    </div>
-                    <i class="bi bi-chevron-right text-muted fs-5"></i>
-                </div>
-
-                <!-- AI Tone Row -->
-                <div class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between" id="btnOpenAiModal">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="mini-icon violet" style="width: 40px; height: 40px; font-size: 1.15rem;"><i class="bi bi-stars"></i></span>
-                        <div>
-                            <strong class="d-block" style="font-size: 0.98rem; color: var(--text);">AI Advisor Persona</strong>
-                            <small class="text-muted" style="font-size: 0.82rem;">Configure advisor chatbot response tone (Current: {{ claims.get('ai_tone', 'Professional') }})</small>
-                        </div>
-                    </div>
-                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                
+                <p class="text-muted mb-4" style="font-size: 0.88rem;">Actions that cannot be undone</p>
+                
+                <div class="d-flex flex-wrap gap-3">
+                    <button class="btn btn-danger d-flex align-items-center gap-2" id="inlineLogoutBtn" type="button" style="background: #ef4444; border: 0; padding: 10px 20px; font-weight: 600;">
+                        <i class="bi bi-box-arrow-right"></i> Logout Account
+                    </button>
+                    <button class="btn btn-danger d-flex align-items-center gap-2" id="inlineDeleteAccountBtn" type="button" style="background: #b91c1c; border: 0; padding: 10px 20px; font-weight: 600;">
+                        <i class="bi bi-trash"></i> DELETE ACCOUNT
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Right Column: Category Management -->
-    <div class="col-lg-6">
-        <div class="panel p-4 border rounded-3 h-100" style="background: var(--surface); border-color: var(--line) !important;">
-            <div class="panel-head border-bottom pb-3 mb-4 d-flex justify-content-between align-items-center" style="border-color: var(--line) !important;">
-                <h3 class="fw-bold mb-0" style="font-size: 1.25rem;"><i class="bi bi-tags me-2 text-success"></i>Categories</h3>
-                <button class="btn btn-brown btn-sm d-flex align-items-center gap-1" id="openAddCategoryBtn" type="button">
-                    <i class="bi bi-plus-lg"></i> Add Category
-                </button>
+</div>
+
+<!-- Tab 2: Category Settings Pane -->
+<div id="categoriesTabPane" class="settings-tab-pane d-none">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="panel p-4 border rounded-3" style="background: var(--surface); border-color: var(--line) !important; min-height: 480px;">
+                <div class="panel-head border-bottom pb-3 mb-4 d-flex justify-content-between align-items-center" style="border-color: var(--line) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem;"><i class="bi bi-tags me-2 text-success"></i>Categories</h3>
+                    <button class="btn btn-brown btn-sm d-flex align-items-center gap-1" id="openAddCategoryBtn" type="button">
+                        <i class="bi bi-plus-lg"></i> Add Category
+                    </button>
+                </div>
+
+                <!-- Categories Tabs: Expense / Income -->
+                <ul class="nav nav-tabs border-bottom mb-3" style="border-color: var(--line) !important;">
+                    <li class="nav-item">
+                        <button class="nav-link active bg-transparent border-0 pb-2 fw-bold" id="expenseTabBtn" type="button" style="border-bottom: 2px solid var(--accent) !important; color: var(--text);">Expense Categories</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link bg-transparent border-0 pb-2" id="incomeTabBtn" type="button" style="color: var(--muted);">Income Categories</button>
+                    </li>
+                </ul>
+                
+                <!-- Category List Wrapper -->
+                <div id="categoryListContainer" class="d-flex flex-column gap-2" style="max-height: 420px; overflow-y: auto;">
+                    <!-- Filled dynamically by categories list -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 3: Help & Support Pane -->
+<div id="helpTabPane" class="settings-tab-pane d-none">
+    <div class="row g-4">
+        <!-- Left Column: FAQs & AI Prompts -->
+        <div class="col-lg-7 d-flex flex-column gap-4">
+            <!-- FAQ Section -->
+            <div class="panel p-4 border rounded-3" style="background: var(--surface); border-color: var(--line) !important;">
+                <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem; color: var(--text);"><i class="bi bi-patch-question me-2 text-warning"></i>Frequently Asked Questions</h3>
+                </div>
+                
+                <div class="accordion accordion-flush" id="settingsFaqAccordion">
+                    <div class="accordion-item bg-transparent border-bottom" style="border-color: var(--line) !important;">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent text-white fw-bold px-0 py-3 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" style="color: var(--text) !important; box-shadow: none;">
+                                How do budget warnings work?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#settingsFaqAccordion">
+                            <div class="accordion-body px-0 text-muted" style="font-size: 0.88rem; line-height: 1.6;">
+                                The app monitors your transactions. When your expense categories cross the designated threshold percentage (e.g. 80%) of the budget limit, a notification alert is automatically created and shown at the topbar bell.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-transparent border-bottom" style="border-color: var(--line) !important;">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent text-white fw-bold px-0 py-3 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" style="color: var(--text) !important; box-shadow: none;">
+                                How safe is my financial data?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#settingsFaqAccordion">
+                            <div class="accordion-body px-0 text-muted" style="font-size: 0.88rem; line-height: 1.6;">
+                                Your financial data is stored locally in an encrypted SQLite database. No credentials or raw bank connections are uploaded to external services, ensuring 100% privacy.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item bg-transparent border-bottom" style="border-color: var(--line) !important;">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent text-white fw-bold px-0 py-3 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" style="color: var(--text) !important; box-shadow: none;">
+                                How do I configure my AI advisor persona tone?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#settingsFaqAccordion">
+                            <div class="accordion-body px-0 text-muted" style="font-size: 0.88rem; line-height: 1.6;">
+                                Go to the **Account & Security** tab, click **AI Advisor Persona** in System Settings, and select a tone like *Direct & Aggressive* (for high-pressure savings push) or *Encouraging* (for support).
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Categories Tabs: Expense / Income -->
-            <ul class="nav nav-tabs border-bottom mb-3" style="border-color: var(--line) !important;">
-                <li class="nav-item">
-                    <button class="nav-link active bg-transparent border-0 pb-2 fw-bold" id="expenseTabBtn" type="button" style="border-bottom: 2px solid var(--accent) !important; color: var(--text);">Expense Categories</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link bg-transparent border-0 pb-2" id="incomeTabBtn" type="button" style="color: var(--muted);">Income Categories</button>
-                </li>
-            </ul>
-            
-            <!-- Category List Wrapper -->
-            <div id="categoryListContainer" class="d-flex flex-column gap-2" style="max-height: 420px; overflow-y: auto;">
-                <!-- Filled dynamically by categories list -->
+            <!-- AI Prompt Cheat Sheet -->
+            <div class="panel p-4 border rounded-3" style="background: var(--surface); border-color: var(--line) !important;">
+                <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem; color: var(--text);"><i class="bi bi-stars me-2 text-violet"></i>AI Chat Cheat Sheet</h3>
+                    <small class="text-muted" style="font-size: 0.82rem;">Click any prompt to ask your AI Advisor instantly</small>
+                </div>
+                
+                <div class="d-flex flex-column gap-2">
+                    <a href="/chat?prompt=Give%20me%20a%20detailed%20summary%20of%20my%20expenses%20this%20month" class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between text-decoration-none">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon violet" style="width: 36px; height: 36px; font-size: 1rem; background: var(--accent) !important; color: #fff;"><i class="bi bi-chat-left-dots"></i></span>
+                            <div>
+                                <span class="d-block fw-bold" style="font-size: 0.92rem; color: var(--text);">"Analyze this month's expenses"</span>
+                                <small class="text-muted" style="font-size: 0.78rem;">Get a categorical review of where your money is going</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+                    
+                    <a href="/chat?prompt=Suggest%20savings%20and%20investment%20options%20based%20on%20my%20profession" class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between text-decoration-none">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon violet" style="width: 36px; height: 36px; font-size: 1rem; background: var(--accent) !important; color: #fff;"><i class="bi bi-graph-up"></i></span>
+                            <div>
+                                <span class="d-block fw-bold" style="font-size: 0.92rem; color: var(--text);">"Investment tips by profession"</span>
+                                <small class="text-muted" style="font-size: 0.78rem;">Tailored savings guidelines based on your onboarded occupation</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+
+                    <a href="/chat?prompt=How%20close%20am%20I%20to%20my%20current%20savings%20goals" class="setting-item-card p-3 border rounded-3 d-flex align-items-center justify-content-between text-decoration-none">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="mini-icon violet" style="width: 36px; height: 36px; font-size: 1rem; background: var(--accent) !important; color: #fff;"><i class="bi bi-bullseye"></i></span>
+                            <div>
+                                <span class="d-block fw-bold" style="font-size: 0.92rem; color: var(--text);">"Goal completion review"</span>
+                                <small class="text-muted" style="font-size: 0.78rem;">Check milestones and estimate times to reach targets</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Support Form & Diagnostics -->
+        <div class="col-lg-5 d-flex flex-column gap-4">
+            <!-- Contact Support Form -->
+            <div class="panel p-4 border rounded-3" style="background: var(--surface); border-color: var(--line) !important;">
+                <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem; color: var(--text);"><i class="bi bi-envelope me-2 text-primary"></i>Contact Creator</h3>
+                </div>
+                
+                <form id="creatorContactForm" class="stack-form">
+                    <div class="mb-3">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Subject</label>
+                        <input type="text" id="contactSubject" class="form-control" placeholder="Bug report, feedback, query..." required style="background: var(--bg); border-color: var(--line); color: var(--text);">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.85rem;">Message</label>
+                        <textarea id="contactMessage" class="form-control" rows="4" placeholder="Describe your issue or write feedback..." required style="background: var(--bg); border-color: var(--line); color: var(--text); height: 110px; resize: none;"></textarea>
+                    </div>
+                    
+                    <button class="btn btn-primary d-flex align-items-center gap-2" type="submit" style="background: var(--accent-2); border: 0; padding: 10px 20px; font-weight: 600;">
+                        <i class="bi bi-send-fill"></i> Send Message
+                    </button>
+                </form>
+            </div>
+
+            <!-- Diagnostics Card -->
+            <div class="panel p-4 border rounded-3" style="background: var(--surface); border-color: var(--line) !important;">
+                <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
+                    <h3 class="fw-bold mb-0" style="font-size: 1.25rem; color: var(--text);"><i class="bi bi-cpu me-2 text-info"></i>Diagnostics</h3>
+                </div>
+                
+                <div class="d-flex flex-column gap-3" style="font-size: 0.88rem;">
+                    <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color: var(--line) !important;">
+                        <span class="text-muted"><i class="bi bi-check-circle-fill text-success me-2"></i>Database status</span>
+                        <span class="fw-bold" style="color: var(--green);">Connected</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color: var(--line) !important;">
+                        <span class="text-muted"><i class="bi bi-folder-fill text-info me-2"></i>Engine</span>
+                        <span class="fw-bold">SQLite v3.x</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color: var(--line) !important;">
+                        <span class="text-muted"><i class="bi bi-person-badge-fill text-violet me-2"></i>User identity</span>
+                        <span class="fw-bold text-truncate" style="max-width: 160px;">{{ claims.get('email', 'Guest') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between py-2">
+                        <span class="text-muted"><i class="bi bi-info-circle-fill text-muted me-2"></i>App Version</span>
+                        <span class="badge bg-secondary-subtle text-muted">v1.2.0 (Stable)</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -309,6 +543,66 @@
     </div>
 </div>
 
+<!-- 5b. Notification Preferences Modal -->
+<div class="modal-backdrop" id="notificationModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="notificationModalTitle" style="max-width: 450px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
+        <button class="modal-close-btn" id="closeNotificationModalBtn" type="button" aria-label="Close modal">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-soft); color: var(--muted); border: 1px solid var(--line);">
+                <i class="bi bi-bell-fill text-warning" style="font-size: 1.45rem;"></i>
+            </div>
+            <div>
+                <h3 id="notificationModalTitle" class="modal-title" style="font-size: 1.35rem; font-weight: 900;">Notification Preferences</h3>
+                <small class="text-muted" style="font-size: 0.85rem;">Manage how you receive alerts and updates</small>
+            </div>
+        </div>
+        <form id="notificationSettingsForm" class="stack-form">
+            <!-- Global Switch -->
+            <div class="form-check form-switch mb-3 p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background: var(--surface-soft); border-color: var(--line) !important; padding-left: 1rem;">
+                <div>
+                    <label class="form-check-label fw-bold d-block" for="settingNotificationsEnabled" style="color: var(--text); font-size: 0.95rem; cursor: pointer;">Enable Notifications</label>
+                    <small class="text-muted" style="font-size: 0.8rem;">Turn all system notifications on or off</small>
+                </div>
+                <input class="form-check-input ms-0" type="checkbox" id="settingNotificationsEnabled" style="width: 45px; height: 24px; cursor: pointer;" {% if claims.get('notifications_enabled', True) %}checked{% endif %}>
+            </div>
+            
+            <!-- Email Alerts Switch -->
+            <div class="form-check form-switch mb-3 p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background: var(--surface-soft); border-color: var(--line) !important; padding-left: 1rem;">
+                <div>
+                    <label class="form-check-label fw-bold d-block" for="settingEmailAlertsEnabled" style="color: var(--text); font-size: 0.95rem; cursor: pointer;">Email Alerts</label>
+                    <small class="text-muted" style="font-size: 0.8rem;">Get immediate emails for security alerts and major actions</small>
+                </div>
+                <input class="form-check-input ms-0" type="checkbox" id="settingEmailAlertsEnabled" style="width: 45px; height: 24px; cursor: pointer;" {% if claims.get('email_alerts_enabled', True) %}checked{% endif %}>
+            </div>
+            
+            <!-- Weekly Summaries Switch -->
+            <div class="form-check form-switch mb-3 p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background: var(--surface-soft); border-color: var(--line) !important; padding-left: 1rem;">
+                <div>
+                    <label class="form-check-label fw-bold d-block" for="settingWeeklySummariesEnabled" style="color: var(--text); font-size: 0.95rem; cursor: pointer;">Weekly Financial Summaries</label>
+                    <small class="text-muted" style="font-size: 0.8rem;">Receive a digest of your spending and savings progress every week</small>
+                </div>
+                <input class="form-check-input ms-0" type="checkbox" id="settingWeeklySummariesEnabled" style="width: 45px; height: 24px; cursor: pointer;" {% if claims.get('weekly_summaries_enabled', True) %}checked{% endif %}>
+            </div>
+            
+            <!-- Budget Threshold Warnings Switch -->
+            <div class="form-check form-switch mb-3 p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background: var(--surface-soft); border-color: var(--line) !important; padding-left: 1rem;">
+                <div>
+                    <label class="form-check-label fw-bold d-block" for="settingBudgetWarningsEnabled" style="color: var(--text); font-size: 0.95rem; cursor: pointer;">Budget Limit Warnings</label>
+                    <small class="text-muted" style="font-size: 0.8rem;">Alert when you cross budget threshold settings</small>
+                </div>
+                <input class="form-check-input ms-0" type="checkbox" id="settingBudgetWarningsEnabled" style="width: 45px; height: 24px; cursor: pointer;" {% if claims.get('budget_warnings_enabled', True) %}checked{% endif %}>
+            </div>
+            
+            <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3" style="border-color: var(--line) !important;">
+                <button class="btn btn-ghost border-0 text-muted" type="button" id="cancelNotificationModalBtn">Cancel</button>
+                <button class="btn btn-brown px-4 py-2" type="submit">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- 6. Add Category Modal Backdrop (kept unchanged) -->
 <div class="modal-backdrop" id="categoryModalBackdrop">
     <div class="transaction-modal" role="dialog" aria-labelledby="categoryModalTitle" style="max-width: 480px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important;">
@@ -370,6 +664,38 @@
                 <button class="btn btn-brown px-4 py-2" type="submit" id="submitCategoryBtn">Add</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Logout Confirmation Modal Backdrop -->
+<div class="modal-backdrop" id="logoutConfirmModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="logoutConfirmModalTitle" style="max-width: 440px; padding: 28px; background: var(--surface) !important; border-color: var(--line) !important; text-align: center;">
+        <div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 56px; height: 56px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+            <i class="bi bi-box-arrow-right" style="font-size: 1.6rem;"></i>
+        </div>
+        <h3 id="logoutConfirmModalTitle" class="modal-title fw-bold" style="font-size: 1.35rem; color: var(--text);">Logout Account</h3>
+        <p class="mt-2 text-muted" style="font-size: 0.92rem; line-height: 1.5; margin-bottom: 28px;">Are you sure you want to log out of your SmartFinance account?</p>
+        <div class="d-flex justify-content-center gap-3">
+            <button class="btn btn-ghost border-0 text-muted" id="cancelLogoutModalBtn" type="button" style="padding: 10px 22px; font-weight: 600;">Cancel</button>
+            <button class="btn btn-danger" id="confirmLogoutModalBtn" type="button" style="background: #ef4444; border: 0; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); color: #fff; padding: 10px 22px; font-weight: 600;">Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal Backdrop -->
+<div class="modal-backdrop" id="deleteAccountConfirmModalBackdrop">
+    <div class="transaction-modal" role="dialog" aria-labelledby="deleteAccountConfirmModalTitle" style="max-width: 450px; padding: 28px; background: var(--surface) !important; border-color: rgba(239, 68, 68, 0.28) !important; text-align: center;">
+        <div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 56px; height: 56px; border-radius: 50%; background: rgba(185, 28, 28, 0.15); color: #b91c1c; border: 1px solid rgba(185, 28, 28, 0.3);">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.6rem;"></i>
+        </div>
+        <h3 id="deleteAccountConfirmModalTitle" class="modal-title fw-bold text-danger" style="font-size: 1.35rem;">DELETE ACCOUNT</h3>
+        <p class="mt-2 text-muted" style="font-size: 0.92rem; line-height: 1.5; margin-bottom: 28px;">
+            WARNING: Are you absolutely sure you want to delete your account? All transactions, budgets, goals, and custom categories will be <strong>permanently deleted</strong>. This action cannot be undone.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <button class="btn btn-ghost border-0 text-muted" id="cancelDeleteAccountModalBtn" type="button" style="padding: 10px 22px; font-weight: 600;">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteAccountModalBtn" type="button" style="background: #b91c1c; border: 0; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.25); color: #fff; padding: 10px 22px; font-weight: 600;">DELETE PERMANENTLY</button>
+        </div>
     </div>
 </div>
 

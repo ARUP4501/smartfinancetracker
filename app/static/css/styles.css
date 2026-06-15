@@ -1803,6 +1803,27 @@ textarea {
     color: var(--text);
 }
 
+/* Custom App Modal Styling */
+.app-modal {
+    background: var(--surface-strong) !important;
+    border: 1px solid var(--line) !important;
+    color: var(--text) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow) !important;
+}
+.app-modal .modal-header,
+.app-modal .modal-footer {
+    border-color: var(--line) !important;
+}
+.app-modal .modal-title {
+    color: var(--text) !important;
+    font-weight: 900;
+}
+.app-modal .btn-close {
+    filter: invert(1) !important;
+}
+
+
 /* Segmented Control for Expense/Income */
 .transaction-type-segment {
     display: flex;
@@ -3607,6 +3628,143 @@ textarea {
     box-shadow: 0 0 30px rgba(168, 85, 247, 0.65), 0 0 50px rgba(37, 99, 235, 0.45) !important;
 }
 
+/* Voice transaction mic button styles */
+.btn-mic {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
 
+.btn-mic.listening {
+    border-color: #ff4d4d !important;
+    color: #ff4d4d !important;
+    background: rgba(255, 77, 77, 0.12) !important;
+    animation: micPulseAnimation 1.5s infinite cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes micPulseAnimation {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4);
+    }
+    70% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 10px rgba(255, 77, 77, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 77, 77, 0);
+    }
+}
+
+@keyframes voiceRingPulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+/* ── Custom Cursor: trailing neon glow ── */
+.cur-dot {
+    position: fixed;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #00f5d4;
+    pointer-events: none;
+    z-index: 100001;
+    transform: translate(-50%, -50%);
+    transition: width 0.25s ease, height 0.25s ease, background 0.25s ease;
+    box-shadow: 0 0 8px #00f5d4;
+}
+.cur-dot.click {
+    width: 12px;
+    height: 12px;
+    background: #ff006e;
+    box-shadow: 0 0 12px #ff006e;
+}
+.cur-ring {
+    position: fixed;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 187, 249, 0.4) 0%, rgba(131, 56, 236, 0.1) 60%, transparent 100%);
+    pointer-events: none;
+    z-index: 100000;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: screen;
+    transition: width 0.35s cubic-bezier(0.34,1.56,0.64,1),
+                height 0.35s cubic-bezier(0.34,1.56,0.64,1),
+                background 0.35s ease;
+}
+.cur-ring.hover {
+    width: 54px; height: 54px;
+    background: radial-gradient(circle, rgba(255, 0, 110, 0.5) 0%, rgba(131, 56, 236, 0.15) 60%, transparent 100%);
+}
+
+/* ── Constant Glowing Background Effect for all KPI Graphs & Charts ── */
+
+/* A. Color-mapped CSS Accent variables for User Portal and Mockup Cards */
+.ac-violet, .kpi-card.violet { --glow-color: 124, 60, 255; }
+.ac-green, .kpi-card.green   { --glow-color: 0, 209, 143; }
+.ac-pink, .kpi-card.pink     { --glow-color: 255, 93, 115; }
+.ac-blue, .kpi-card.blue     { --glow-color: 76, 201, 240; }
+.ac-orange                   { --glow-color: 255, 159, 67; }
+.ac-cyan                     { --glow-color: 34, 211, 238; }
+
+/* B. Global Portals: cards & panels hosting a graph canvas */
+.an-card, .panel:has(canvas) {
+    border-color: rgba(var(--glow-color, 99, 102, 241), 0.22) !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), 0 0 16px rgba(var(--glow-color, 99, 102, 241), 0.08) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+/* Permanent inner backing glow for portal canvases */
+.an-card .chart-wrap,
+.panel:has(canvas) .chart-frame,
+.panel:has(canvas) .budget-ring,
+.panel:has(canvas) .p-3:has(canvas) {
+    position: relative;
+    background: radial-gradient(circle at 50% 50%, rgba(var(--glow-color, 99, 102, 241), 0.16) 0%, rgba(15, 23, 42, 0) 70%) !important;
+    border-radius: 12px;
+    box-shadow: inset 0 0 12px rgba(var(--glow-color, 99, 102, 241), 0.04);
+}
+
+/* C. Dashboard KPI Metric Cards Sparkline Glow */
+.kpi-card {
+    border-color: rgba(var(--glow-color, 99, 102, 241), 0.22) !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15), 0 0 15px rgba(var(--glow-color, 99, 102, 241), 0.08) !important;
+    position: relative;
+    transition: all 0.3s ease;
+}
+.kpi-card .sparkline {
+    filter: drop-shadow(0 2px 8px rgba(var(--glow-color, 99, 102, 241), 0.35));
+}
+.kpi-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 120%, rgba(var(--glow-color, 99, 102, 241), 0.12) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+/* D. Landing Page iPhone Mockup SVG Graphs Glow */
+.iphone-balance-card {
+    --glow-color: 59, 130, 246; /* Accent Blue */
+    border: 1px solid rgba(var(--glow-color), 0.32) !important;
+    box-shadow: 0 0 16px rgba(var(--glow-color), 0.16), inset 0 0 10px rgba(var(--glow-color), 0.08) !important;
+}
+.iphone-chart-section {
+    --glow-color: 99, 102, 241; /* Accent Indigo */
+    border: 1px solid rgba(var(--glow-color), 0.32) !important;
+    box-shadow: 0 0 16px rgba(var(--glow-color), 0.16), inset 0 0 10px rgba(var(--glow-color), 0.08) !important;
+}
+.iphone-sparkline-container, .iphone-area-chart-container {
+    background: radial-gradient(circle at 50% 50%, rgba(var(--glow-color, 99, 102, 241), 0.24) 0%, transparent 70%) !important;
+    border-radius: 8px;
+}
 
 

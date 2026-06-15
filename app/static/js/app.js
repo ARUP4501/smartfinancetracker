@@ -20,10 +20,213 @@ function toast(message, type = "success") {
     const host = document.getElementById("toastHost");
     if (!host) return;
     const el = document.createElement("div");
-    el.className = `toast align-items-center text-bg-${type === "error" ? "danger" : "dark"} border-0`;
-    el.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
-    host.appendChild(el);
-    new bootstrap.Toast(el).show();
+    
+    if (type === "error") {
+        // Create backdrop wrapper
+        const backdrop = document.createElement("div");
+        backdrop.id = "error-toast-backdrop";
+        backdrop.style.position = "fixed";
+        backdrop.style.top = "0";
+        backdrop.style.left = "0";
+        backdrop.style.width = "100vw";
+        backdrop.style.height = "100vh";
+        backdrop.style.backgroundColor = "rgba(0, 0, 0, 0.55)";
+        backdrop.style.backdropFilter = "blur(6px)";
+        backdrop.style.zIndex = "10040";
+        backdrop.style.transition = "opacity 0.2s ease";
+        
+        el.className = `toast align-items-center border-0`;
+        el.style.position = "fixed";
+        el.style.top = "50%";
+        el.style.left = "50%";
+        el.style.transform = "translate(-50%, -50%)";
+        el.style.zIndex = "10050";
+        el.style.minWidth = "360px";
+        el.style.maxWidth = "90vw";
+        el.style.background = "var(--surface-strong, rgba(14, 29, 52, 0.98))";
+        el.style.border = "1px solid var(--pink, #ff3d70) !important";
+        el.style.boxShadow = "0 0 35px rgba(255, 61, 112, 0.5)";
+        el.style.color = "var(--text, #f8fbff)";
+        el.style.borderRadius = "14px";
+        
+        el.innerHTML = `
+            <div class="d-flex flex-column align-items-center p-4">
+                <div class="toast-body fs-6 text-center py-2 px-1 mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-danger d-block mb-3" style="font-size: 2rem;"></i>
+                    <span style="line-height: 1.4; display: block;">${message}</span>
+                </div>
+                <button type="button" class="btn px-4 py-2 border-0" data-bs-dismiss="toast" style="background: linear-gradient(135deg, var(--pink, #ff3d70), #d92150); color: #fff; font-weight: 600; border-radius: 10px; box-shadow: 0 4px 15px rgba(255, 61, 112, 0.35); transition: transform 0.1s ease; outline: none;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">OK</button>
+            </div>
+        `;
+        
+        document.body.appendChild(backdrop);
+        document.body.appendChild(el);
+        
+        const bsToast = new bootstrap.Toast(el, { delay: 8000 });
+        bsToast.show();
+        
+        // Remove backdrop when toast is hidden
+        el.addEventListener('hidden.bs.toast', () => {
+            backdrop.remove();
+            el.remove();
+        });
+        
+        // Close toast if backdrop is clicked
+        backdrop.addEventListener('click', () => {
+            bsToast.hide();
+        });
+    } else {
+        el.className = `toast align-items-center text-bg-dark border-0`;
+        el.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+        host.appendChild(el);
+        new bootstrap.Toast(el).show();
+    }
+}
+
+function showVoiceOverlay(onCancel) {
+    let overlay = document.getElementById("voice-recognition-overlay");
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = "voice-recognition-overlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100vw";
+    overlay.style.height = "100vh";
+    overlay.style.backgroundColor = "rgba(13, 17, 23, 0.85)";
+    overlay.style.backdropFilter = "blur(8px)";
+    overlay.style.zIndex = "9999";
+    overlay.style.display = "flex";
+    overlay.style.flexDirection = "column";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.color = "#fff";
+    overlay.style.fontFamily = "system-ui, sans-serif";
+    overlay.style.transition = "opacity 0.3s ease";
+    overlay.style.opacity = "0";
+
+    const card = document.createElement("div");
+    card.style.display = "flex";
+    card.style.flexDirection = "column";
+    card.style.alignItems = "center";
+    card.style.justifyContent = "center";
+    card.style.padding = "40px";
+    card.style.borderRadius = "24px";
+    card.style.background = "linear-gradient(135deg, #1e1b4b, #0f172a)";
+    card.style.border = "1px solid rgba(124, 77, 255, 0.25)";
+    card.style.boxShadow = "0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 77, 255, 0.15)";
+    card.style.textAlign = "center";
+    card.style.maxWidth = "400px";
+    card.style.width = "90%";
+
+    const pulseContainer = document.createElement("div");
+    pulseContainer.style.position = "relative";
+    pulseContainer.style.width = "100px";
+    pulseContainer.style.height = "100px";
+    pulseContainer.style.marginBottom = "30px";
+    pulseContainer.style.display = "flex";
+    pulseContainer.style.alignItems = "center";
+    pulseContainer.style.justifyContent = "center";
+
+    const pulseRing1 = document.createElement("div");
+    pulseRing1.style.position = "absolute";
+    pulseRing1.style.width = "100%";
+    pulseRing1.style.height = "100%";
+    pulseRing1.style.borderRadius = "50%";
+    pulseRing1.style.backgroundColor = "rgba(255, 77, 77, 0.4)";
+    pulseRing1.style.animation = "voiceRingPulse 2s infinite ease-out";
+
+    const pulseRing2 = document.createElement("div");
+    pulseRing2.style.position = "absolute";
+    pulseRing2.style.width = "100%";
+    pulseRing2.style.height = "100%";
+    pulseRing2.style.borderRadius = "50%";
+    pulseRing2.style.backgroundColor = "rgba(255, 77, 77, 0.2)";
+    pulseRing2.style.animation = "voiceRingPulse 2s infinite ease-out 0.7s";
+
+    const micIcon = document.createElement("div");
+    micIcon.style.position = "relative";
+    micIcon.style.zIndex = "2";
+    micIcon.style.width = "70px";
+    micIcon.style.height = "70px";
+    micIcon.style.borderRadius = "50%";
+    micIcon.style.backgroundColor = "#ff4d4d";
+    micIcon.style.display = "flex";
+    micIcon.style.alignItems = "center";
+    micIcon.style.justifyContent = "center";
+    micIcon.style.boxShadow = "0 8px 24px rgba(255, 77, 77, 0.4)";
+    micIcon.innerHTML = '<i class="bi bi-mic-fill" style="font-size: 2.2rem; color: white;"></i>';
+
+    pulseContainer.appendChild(pulseRing1);
+    pulseContainer.appendChild(pulseRing2);
+    pulseContainer.appendChild(micIcon);
+
+    const title = document.createElement("h3");
+    title.textContent = "Listening...";
+    title.style.margin = "0 0 10px 0";
+    title.style.fontSize = "1.6rem";
+    title.style.fontWeight = "800";
+    title.style.background = "linear-gradient(135deg, #ffffff, #c7d2fe)";
+    title.style.webkitBackgroundClip = "text";
+    title.style.webkitTextFillColor = "transparent";
+
+    const subtitle = document.createElement("p");
+    subtitle.textContent = "Please speak clearly now";
+    subtitle.style.margin = "0 0 24px 0";
+    subtitle.style.color = "#94a3b8";
+    subtitle.style.fontSize = "1rem";
+    subtitle.style.fontWeight = "500";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.style.padding = "10px 24px";
+    cancelBtn.style.borderRadius = "14px";
+    cancelBtn.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+    cancelBtn.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+    cancelBtn.style.color = "#94a3b8";
+    cancelBtn.style.cursor = "pointer";
+    cancelBtn.style.fontWeight = "700";
+    cancelBtn.style.fontSize = "0.9rem";
+    cancelBtn.style.transition = "all 0.2s";
+
+    cancelBtn.addEventListener("mouseover", () => {
+        cancelBtn.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+        cancelBtn.style.color = "#fff";
+    });
+    cancelBtn.addEventListener("mouseleave", () => {
+        cancelBtn.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+        cancelBtn.style.color = "#94a3b8";
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        if (onCancel) onCancel();
+        hideVoiceOverlay();
+    });
+
+    card.appendChild(pulseContainer);
+    card.appendChild(title);
+    card.appendChild(subtitle);
+    card.appendChild(cancelBtn);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    setTimeout(() => {
+        overlay.style.opacity = "1";
+    }, 10);
+
+    return overlay;
+}
+
+function hideVoiceOverlay() {
+    const overlay = document.getElementById("voice-recognition-overlay");
+    if (overlay) {
+        overlay.style.opacity = "0";
+        setTimeout(() => {
+            overlay.remove();
+        }, 300);
+    }
 }
 
 function setupShell() {
@@ -61,6 +264,9 @@ function setupShell() {
             menu.style.setProperty("background-color", bg, "important");
             menu.style.setProperty("border", `1px solid ${border}`, "important");
         });
+        
+        // Reload page to correctly re-initialize Chart.js color options dynamically
+        location.reload();
     });
     localStorage.removeItem("theme");
     localStorage.removeItem("smartfinance-theme");
@@ -549,7 +755,17 @@ function setupAuth() {
         try {
             await api("/api/auth/login", { method: "POST", body: JSON.stringify(formData(login)) });
             location.href = "/dashboard";
-        } catch (error) { document.getElementById("authMessage").textContent = error.message; }
+        } catch (error) { 
+            const authMsgEl = document.getElementById("authMessage");
+            if (authMsgEl) {
+                if (error.message && error.message.toLowerCase().includes("not verified")) {
+                    const emailVal = login.querySelector('input[name="email"]')?.value || "";
+                    authMsgEl.innerHTML = `${error.message} <a href="/verify-otp?email=${encodeURIComponent(emailVal)}" class="text-accent fw-bold" style="text-decoration: none;">Verify Now</a>`;
+                } else {
+                    authMsgEl.textContent = error.message;
+                }
+            }
+        }
     });
     const adminLogin = document.getElementById("adminLoginForm");
     adminLogin?.addEventListener("submit", async event => {
@@ -570,7 +786,8 @@ function setupAuth() {
         }
         try {
             await api("/api/auth/register", { method: "POST", body: JSON.stringify(formData(register)) });
-            location.href = "/login";
+            const emailVal = register.querySelector('input[name="email"]')?.value || "";
+            location.href = `/verify-otp?email=${encodeURIComponent(emailVal)}`;
         } catch (error) { document.getElementById("authMessage").textContent = error.message; }
     });
     const password = document.getElementById("passwordInput");
@@ -607,8 +824,22 @@ function setupAuth() {
     });
     document.getElementById("resetRequestForm")?.addEventListener("submit", async event => {
         event.preventDefault();
-        const data = await api("/api/auth/password/reset-request", { method: "POST", body: JSON.stringify(formData(event.target)) });
-        document.getElementById("authMessage").textContent = `Dev reset token: ${data.dev_reset_token}`;
+        try {
+            await api("/api/auth/password/reset-request", { method: "POST", body: JSON.stringify(formData(event.target)) });
+            
+            // Close modal
+            const modalEl = document.getElementById("resetModal");
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.hide();
+            
+            // Redirect to success page
+            window.location.href = "/password/reset-requested";
+        } catch (error) {
+            const authMsgEl = document.getElementById("authMessage");
+            if (authMsgEl) {
+                authMsgEl.textContent = error.message;
+            }
+        }
     });
 }
 
@@ -658,8 +889,188 @@ function chart(id, type, data, options = {}) {
     });
 }
 
+async function setupDailyAdvice() {
+    const section = document.getElementById("aiAdviceSection");
+    if (!section) return;
+
+    let adviceList = [];
+    let currentAdviceIndex = 0;
+
+    const renderPlaceholder = () => {
+        section.innerHTML = `
+            <div class="col-12 animate-fadeIn">
+                <div id="aiAdviceCard" class="panel p-4 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" 
+                     style="background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(32, 136, 255, 0.08)); 
+                            border-color: var(--accent) !important; 
+                            box-shadow: 0 0 20px rgba(124, 77, 255, 0.15);
+                            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);">
+                    <div class="d-flex align-items-center gap-3 flex-wrap w-100 justify-content-between">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="d-flex align-items-center justify-content-center" 
+                                 style="width: 52px; height: 52px; border-radius: 50%; background: rgba(124, 77, 255, 0.2); color: #fff; border: 1px solid var(--accent); box-shadow: 0 0 10px rgba(124, 77, 255, 0.3);">
+                                <i class="bi bi-stars" style="font-size: 1.45rem;"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold mb-1" style="font-size: 1.15rem; color: var(--text);">
+                                    AI Daily Financial Advice
+                                </h4>
+                                <p class="mb-0 text-muted" style="font-size: 0.92rem; max-width: 800px; line-height: 1.5;">
+                                    Get personalized daily insights, budget audits, and savings recommendations based on your current balance.
+                                </p>
+                            </div>
+                        </div>
+                        <button id="generateAdviceBtn" class="btn btn-accent px-4 py-2" style="border-radius: 20px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 4px 12px rgba(124, 77, 255, 0.25);">
+                            Generate Today's Advice <i class="bi bi-magic ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const btn = document.getElementById("generateAdviceBtn");
+        if (btn) {
+            btn.addEventListener("click", fetchAndRenderAdvice);
+        }
+    };
+
+    const renderLoading = () => {
+        section.innerHTML = `
+            <div class="col-12 animate-fadeIn">
+                <div id="aiAdviceCard" class="panel p-4 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" 
+                     style="background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(32, 136, 255, 0.08)); 
+                            border-color: var(--accent) !important; 
+                            box-shadow: 0 0 20px rgba(124, 77, 255, 0.15);
+                            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);">
+                    <div class="d-flex align-items-center gap-3 flex-wrap w-100">
+                        <div class="d-flex align-items-center justify-content-center" 
+                             style="width: 52px; height: 52px; border-radius: 50%; background: rgba(124, 77, 255, 0.1); color: var(--accent); border: 1px solid rgba(124, 77, 255, 0.3);">
+                            <div class="spinner-border spinner-border-sm" role="status" style="width: 1.5rem; height: 1.5rem; border-width: 0.2em; color: var(--accent);"></div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="fw-bold mb-1" style="font-size: 1.15rem; color: var(--text);">Consulting AI Financial Coach...</h4>
+                            <div class="d-flex flex-column gap-2 mt-2" style="max-width: 500px;">
+                                <div style="height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.08); animation: shimmer 1.5s infinite linear; background-size: 200% 100%;"></div>
+                                <div style="height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.08); animation: shimmer 1.5s infinite linear; background-size: 200% 100%; width: 75%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    const showAdviceCard = () => {
+        if (!adviceList.length) return;
+        const advice = adviceList[currentAdviceIndex];
+
+        let borderTheme = "var(--accent)";
+        let shadowTheme = "rgba(124, 77, 255, 0.15)";
+        let avatarBg = "rgba(124, 77, 255, 0.2)";
+        let iconTheme = "bi-stars";
+        let badgeTheme = "info";
+
+        if (advice.severity === "danger") {
+            borderTheme = "var(--pink)";
+            shadowTheme = "rgba(255, 61, 112, 0.2)";
+            avatarBg = "rgba(255, 61, 112, 0.2)";
+            iconTheme = "bi-exclamation-triangle-fill";
+            badgeTheme = "danger";
+        } else if (advice.severity === "warning") {
+            borderTheme = "var(--warning)";
+            shadowTheme = "rgba(255, 159, 67, 0.2)";
+            avatarBg = "rgba(255, 159, 67, 0.2)";
+            iconTheme = "bi-exclamation-circle-fill";
+            badgeTheme = "warning";
+        } else if (advice.severity === "success") {
+            borderTheme = "var(--green)";
+            shadowTheme = "rgba(0, 209, 143, 0.2)";
+            avatarBg = "rgba(0, 209, 143, 0.2)";
+            iconTheme = "bi-check-circle-fill";
+            badgeTheme = "success";
+        }
+
+        section.innerHTML = `
+            <div class="col-12 animate-fadeIn">
+                <div id="aiAdviceCard" class="panel p-4 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" 
+                     style="background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(32, 136, 255, 0.08)); 
+                            border-color: ${borderTheme} !important; 
+                            box-shadow: 0 0 20px ${shadowTheme};
+                            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="d-flex align-items-center justify-content-center" 
+                             style="width: 52px; height: 52px; border-radius: 50%; background: ${avatarBg}; color: #fff; border: 1px solid ${borderTheme}; box-shadow: 0 0 10px ${shadowTheme};">
+                            <i class="bi ${iconTheme}" style="font-size: 1.45rem;"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-1" style="font-size: 1.15rem; color: var(--text);">
+                                ${advice.title}
+                                <span class="badge bg-${badgeTheme} ms-2" style="font-size: 0.68rem; vertical-align: middle; text-transform: uppercase;">Daily Task</span>
+                            </h4>
+                            <p class="mb-0 text-muted" style="font-size: 0.92rem; max-width: 800px; line-height: 1.5;">${advice.message}</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        ${advice.action_url ? `
+                        <a href="${advice.action_url}" class="btn btn-accent px-4 py-2" style="border-radius: 20px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 4px 12px rgba(124, 77, 255, 0.25);">
+                            ${advice.action_text} <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                        ` : ''}
+                        <a href="/chat?q=${encodeURIComponent("Tell me more about today's AI advice: " + advice.title + " - " + advice.message)}" class="btn btn-ghost px-3 py-2 d-flex align-items-center gap-1" style="border-radius: 20px; font-size: 0.85rem;" title="Ask AI Coach for details">
+                            <i class="bi bi-chat-left-text"></i> <span class="d-none d-sm-inline">Discuss</span>
+                        </a>
+                        <button id="regenerateAdviceBtn" class="btn btn-ghost p-2 rounded-circle animate-rotate" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: var(--muted); border: 1px solid var(--line);" title="Show Next Advice">
+                            <i class="bi bi-arrow-clockwise" style="font-size: 1.1rem;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const regenBtn = document.getElementById("regenerateAdviceBtn");
+        if (regenBtn) {
+            regenBtn.addEventListener("click", () => {
+                currentAdviceIndex = (currentAdviceIndex + 1) % adviceList.length;
+                showAdviceCard();
+                toast("Showing next advice!");
+            });
+            regenBtn.addEventListener("mouseover", () => {
+                regenBtn.style.color = "var(--text)";
+                regenBtn.style.background = "rgba(255,255,255,0.05)";
+            });
+            regenBtn.addEventListener("mouseout", () => {
+                regenBtn.style.color = "var(--muted)";
+                regenBtn.style.background = "transparent";
+            });
+        }
+    };
+
+    const fetchAndRenderAdvice = async () => {
+        renderLoading();
+        try {
+            await new Promise(r => setTimeout(r, 800));
+            const adviceData = await api("/api/analytics/daily-advice");
+            if (adviceData && adviceData.length) {
+                adviceList = adviceData;
+                currentAdviceIndex = 0;
+                showAdviceCard();
+            } else {
+                throw new Error("Empty advice data");
+            }
+        } catch (err) {
+            console.error("Failed to generate AI advice:", err);
+            toast("Failed to generate advice. Please try again.", "error");
+            renderPlaceholder();
+        }
+    };
+
+    // Always start with placeholder on page load (do not auto-retrieve from cache on refresh)
+    renderPlaceholder();
+    section.style.display = "block";
+}
+
 async function setupDashboard() {
     if (!document.getElementById("dashboardChart")) return;
+    setupDailyAdvice();
     const today = new Date();
     const dateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     const initial = await api(`/api/analytics/dashboard?${qs({ date: dateKey(today) })}`);
@@ -1591,6 +2002,70 @@ function setupTransactions() {
     const parserForm = document.getElementById("parserForm");
     const parserTextarea = parserForm?.querySelector('textarea[name="message"]');
 
+    // Smart Parser Voice Input
+    const parserMicBtn = document.getElementById("parserMicBtn");
+    if (parserMicBtn) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            parserMicBtn.style.display = "none";
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-IN";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            
+            let isListening = false;
+            
+            parserMicBtn.addEventListener("click", () => {
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.error("Failed to start speech recognition:", e);
+                    }
+                }
+            });
+            
+            recognition.onstart = () => {
+                isListening = true;
+                parserMicBtn.classList.add("listening");
+                parserMicBtn.innerHTML = '<i class="bi bi-record-fill"></i>';
+                showVoiceOverlay(() => {
+                    recognition.abort();
+                });
+            };
+            
+            recognition.onend = () => {
+                isListening = false;
+                parserMicBtn.classList.remove("listening");
+                parserMicBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+                hideVoiceOverlay();
+            };
+            
+            recognition.onresult = (event) => {
+                const speechToText = event.results[0][0].transcript;
+                toast(`Recognized: "${speechToText}"`);
+                hideVoiceOverlay();
+                if (parserTextarea) {
+                    parserTextarea.value = speechToText;
+                    parserForm?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+                }
+            };
+            
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                hideVoiceOverlay();
+                if (event.error === "not-allowed") {
+                    toast("Microphone access denied. Please grant permission in browser settings.", "error");
+                } else if (event.error !== "no-speech") {
+                    toast("Speech recognition failed: " + event.error, "error");
+                }
+            };
+        }
+    }
+
     parserUploadBtn?.addEventListener("click", () => {
         parserFileInput?.click();
     });
@@ -1870,12 +2345,6 @@ let budgetIdToDelete = null;
 let budgetIdToEdit = null;
 
 async function loadBudgets() {
-    const emptyState = document.getElementById("emptyBudgetsState");
-    const listPanel = document.getElementById("budgetsListPanel");
-    const container = document.getElementById("budgetsContainer");
-    
-    if (!container) return;
-    
     try {
         const resData = await api("/api/budgets/");
         const items = resData?.items || [];
@@ -1903,85 +2372,130 @@ async function loadBudgets() {
             remainingVal.className = remaining >= 0 ? "text-success fw-bold" : "text-danger fw-bold";
         }
         
-        if (items.length === 0) {
-            if (emptyState) emptyState.classList.remove("d-none");
-            if (listPanel) listPanel.classList.add("d-none");
-        } else {
-            if (emptyState) emptyState.classList.add("d-none");
-            if (listPanel) listPanel.classList.remove("d-none");
-            
-            container.innerHTML = items.map(item => {
-                const isOverall = !item.category || item.category === "Overall" || (item.category && item.category.includes("Overall"));
-                const catText = isOverall ? "Overall Budget" : (categoryEmojiMap[item.category] || item.category);
-                
-                // Exceeded status or on track status
-                let badgeClass = "bg-success-subtle text-success";
-                let statusText = "On Track";
-                if (item.usage >= 100) {
-                    badgeClass = "bg-danger-subtle text-danger";
-                    statusText = "Exceeded";
-                } else if (item.usage >= 80) {
-                    badgeClass = "bg-warning-subtle text-warning";
-                    statusText = "Warning";
-                }
-                
-                const progressColorStyle = item.severity === "danger" ? "background-color: var(--pink) !important;" : item.severity === "orange" ? "background-color: var(--orange) !important;" : "background-color: var(--green) !important;";
-                
-                const remaining = item.amount - item.spent;
-                const remainingText = remaining >= 0 ? `${money(remaining)} left` : `${money(Math.abs(remaining))} over limit`;
-                
-                return `<div class="p-3 border rounded-3 mb-3" style="background: var(--surface); border-color: var(--line) !important;">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="fw-bold m-0" style="font-size: 1.15rem; color: var(--text);">${catText}</h4>
-                            <small class="text-muted" style="font-size: 0.8rem;">${item.period || 'monthly'}</small>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge ${badgeClass}" style="font-size: 0.78rem; padding: 5px 10px; border-radius: 6px;">${statusText}</span>
-                            <button class="btn btn-sm btn-ghost edit-budget border-0 bg-transparent text-muted p-1" data-id="${item._id}" style="font-size: 0.95rem;"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-ghost delete-budget border-0 bg-transparent text-muted p-1" data-id="${item._id}" style="font-size: 0.95rem; color: var(--pink) !important;"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mt-3" style="font-size: 0.92rem;">
-                        <span><strong class="fw-bold">${money(item.spent)}</strong> spent</span>
-                        <span class="text-muted">of ${money(item.amount)}</span>
-                    </div>
-                    
-                    <div class="progress mt-2" style="height: 10px; border-radius: 5px;">
-                        <div class="progress-bar" role="progressbar" style="width: ${Math.min(item.usage, 100)}%; border-radius: 5px; ${progressColorStyle}"></div>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 0.82rem; color: var(--muted);">
-                        <span>${item.usage}% used</span>
-                        <span>${remainingText}</span>
-                    </div>
-                </div>`;
-            }).join("");
-            
-            // Set delete buttons click listeners
-            container.querySelectorAll(".delete-budget").forEach(btn => {
-                btn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    budgetIdToDelete = btn.dataset.id;
-                    document.getElementById("deleteBudgetConfirmModalBackdrop")?.classList.add("open");
-                });
-            });
-            
-            // Set edit buttons click listeners
-            container.querySelectorAll(".edit-budget").forEach(btn => {
-                btn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    const id = btn.dataset.id;
-                    const item = (window.loadedBudgets || []).find(b => b._id === id);
-                    if (item) {
-                        prefillAndOpenBudgetModal(item, true);
-                    }
-                });
-            });
-        }
+        renderBudgets();
     } catch (err) {
         console.error("Error loading budgets:", err);
+    }
+}
+
+function renderBudgets() {
+    const emptyState = document.getElementById("emptyBudgetsState");
+    const listPanel = document.getElementById("budgetsListPanel");
+    const container = document.getElementById("budgetsContainer");
+    
+    if (!container) return;
+    
+    const items = window.loadedBudgets || [];
+    
+    if (items.length === 0) {
+        if (emptyState) emptyState.classList.remove("d-none");
+        if (listPanel) listPanel.classList.add("d-none");
+    } else {
+        if (emptyState) emptyState.classList.add("d-none");
+        if (listPanel) listPanel.classList.remove("d-none");
+        
+        const searchVal = (document.getElementById("budgetSearch")?.value || "").toLowerCase();
+        const periodVal = document.getElementById("filterBudgetPeriod")?.value || "";
+        const statusVal = document.getElementById("filterBudgetStatus")?.value || "";
+        
+        const filtered = items.filter(item => {
+            if (searchVal) {
+                const cat = (item.category || "").toLowerCase();
+                const month = (item.month || "").toLowerCase();
+                if (!cat.includes(searchVal) && !month.includes(searchVal)) return false;
+            }
+            if (periodVal && item.period !== periodVal) return false;
+            if (statusVal) {
+                let status = "On Track";
+                if (item.usage >= 100) {
+                    status = "Exceeded";
+                } else if (item.usage >= 80) {
+                    status = "Warning";
+                }
+                if (status !== statusVal) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="p-4 text-center text-muted w-100" style="font-size: 0.95rem;">
+                    <i class="bi bi-search d-block mb-2" style="font-size: 1.5rem;"></i>
+                    No budgets match your filters.
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = filtered.map(item => {
+            const isOverall = !item.category || item.category === "Overall" || (item.category && item.category.includes("Overall"));
+            const catText = isOverall ? "Overall Budget" : (categoryEmojiMap[item.category] || item.category);
+            
+            // Exceeded status or on track status
+            let badgeClass = "bg-success-subtle text-success";
+            let statusText = "On Track";
+            if (item.usage >= 100) {
+                badgeClass = "bg-danger-subtle text-danger";
+                statusText = "Exceeded";
+            } else if (item.usage >= 80) {
+                badgeClass = "bg-warning-subtle text-warning";
+                statusText = "Warning";
+            }
+            
+            const progressColorStyle = item.severity === "danger" ? "background-color: var(--pink) !important;" : item.severity === "orange" ? "background-color: var(--orange) !important;" : "background-color: var(--green) !important;";
+            
+            const remaining = item.amount - item.spent;
+            const remainingText = remaining >= 0 ? `${money(remaining)} left` : `${money(Math.abs(remaining))} over limit`;
+            
+            return `<div class="p-3 border rounded-3 mb-3" style="background: var(--surface); border-color: var(--line) !important;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="fw-bold m-0" style="font-size: 1.15rem; color: var(--text);">${catText}</h4>
+                        <small class="text-muted" style="font-size: 0.8rem;">${item.period || 'monthly'}</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${badgeClass}" style="font-size: 0.78rem; padding: 5px 10px; border-radius: 6px;">${statusText}</span>
+                        <button class="btn btn-sm btn-ghost edit-budget border-0 bg-transparent text-muted p-1" data-id="${item._id}" style="font-size: 0.95rem;"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-ghost delete-budget border-0 bg-transparent text-muted p-1" data-id="${item._id}" style="font-size: 0.95rem; color: var(--pink) !important;"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-3" style="font-size: 0.92rem;">
+                    <span><strong class="fw-bold">${money(item.spent)}</strong> spent</span>
+                    <span class="text-muted">of ${money(item.amount)}</span>
+                </div>
+                
+                <div class="progress mt-2" style="height: 10px; border-radius: 5px;">
+                    <div class="progress-bar" role="progressbar" style="width: ${Math.min(item.usage, 100)}%; border-radius: 5px; ${progressColorStyle}"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 0.82rem; color: var(--muted);">
+                    <span>${item.usage}% used</span>
+                    <span>${remainingText}</span>
+                </div>
+            </div>`;
+        }).join("");
+        
+        // Set delete buttons click listeners
+        container.querySelectorAll(".delete-budget").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                budgetIdToDelete = btn.dataset.id;
+                document.getElementById("deleteBudgetConfirmModalBackdrop")?.classList.add("open");
+            });
+        });
+        
+        // Set edit buttons click listeners
+        container.querySelectorAll(".edit-budget").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                const item = (window.loadedBudgets || []).find(b => b._id === id);
+                if (item) {
+                    prefillAndOpenBudgetModal(item, true);
+                }
+            });
+        });
     }
 }
 
@@ -2099,6 +2613,19 @@ function setupBudgets() {
         }
     });
     
+    document.getElementById("budgetSearch")?.addEventListener("input", renderBudgets);
+    document.getElementById("filterBudgetPeriod")?.addEventListener("change", renderBudgets);
+    document.getElementById("filterBudgetStatus")?.addEventListener("change", renderBudgets);
+    document.getElementById("resetBudgetFiltersBtn")?.addEventListener("click", () => {
+        const s = document.getElementById("budgetSearch");
+        if (s) s.value = "";
+        const p = document.getElementById("filterBudgetPeriod");
+        if (p) p.value = "";
+        const st = document.getElementById("filterBudgetStatus");
+        if (st) st.value = "";
+        renderBudgets();
+    });
+
     loadBudgets();
 }
 
@@ -2109,12 +2636,6 @@ const goalColors = ["violet", "green", "orange", "blue", "pink", "gold", "teal",
 const goalIcons = ["bi-trophy", "bi-airplane", "bi-laptop", "bi-house", "bi-shield-fill-check", "bi-bicycle", "bi-music-note-beamed", "bi-book"];
 
 async function loadGoals() {
-    const emptyState = document.getElementById("emptyGoalsState");
-    const listPanel = document.getElementById("goalsListPanel");
-    const container = document.getElementById("goalsContainer");
-
-    if (!container) return;
-
     try {
         const resData = await api("/api/goals/");
         const items = resData?.items || [];
@@ -2141,108 +2662,146 @@ async function loadGoals() {
         if (totalSavedEl) totalSavedEl.textContent = money(totalSaved);
         if (totalAchievedEl) totalAchievedEl.textContent = achieved;
 
-        if (items.length === 0) {
-            if (emptyState) emptyState.classList.remove("d-none");
-            if (listPanel) listPanel.classList.add("d-none");
-        } else {
-            if (emptyState) emptyState.classList.add("d-none");
-            if (listPanel) listPanel.classList.remove("d-none");
-
-            container.innerHTML = items.map((item, index) => {
-                const completion = Math.min(Math.round((item.current_amount || 0) / (item.target_amount || 1) * 100), 100);
-                const isAchieved = (item.current_amount || 0) >= (item.target_amount || 1);
-                const remaining = Math.max(0, (item.target_amount || 0) - (item.current_amount || 0));
-
-                const tone = goalColors[index % goalColors.length];
-                const icon = goalIcons[index % goalIcons.length];
-
-                let badgeClass = "bg-success-subtle text-success";
-                let statusText = "On Track";
-                if (isAchieved) {
-                    badgeClass = "bg-info-subtle text-info";
-                    statusText = "🎉 Achieved";
-                } else if (completion >= 75) {
-                    badgeClass = "bg-warning-subtle text-warning";
-                    statusText = "Almost There";
-                }
-
-                const progressColor = isAchieved ? "var(--green)" : completion >= 75 ? "var(--orange)" : `var(--${tone})`;
-
-                // Target date display
-                let targetDateHtml = "";
-                if (item.target_date) {
-                    const targetDate = new Date(item.target_date);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
-                    const formattedDate = targetDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-                    let daysLabel = "";
-                    let daysColor = "var(--muted)";
-                    if (!isAchieved) {
-                        if (diffDays < 0) {
-                            daysLabel = `<span style="color: var(--pink); font-weight: 700;"> • ${Math.abs(diffDays)}d overdue</span>`;
-                        } else if (diffDays === 0) {
-                            daysLabel = `<span style="color: var(--orange); font-weight: 700;"> • Due today!</span>`;
-                        } else if (diffDays <= 30) {
-                            daysLabel = `<span style="color: var(--orange); font-weight: 700;"> • ${diffDays}d left</span>`;
-                        } else {
-                            daysLabel = `<span style="color: var(--muted);"> • ${diffDays}d left</span>`;
-                        }
-                    }
-                    targetDateHtml = `<small style="font-size: 0.78rem; color: var(--muted);"><i class="bi bi-calendar3" style="margin-right:4px;"></i>${formattedDate}${daysLabel}</small>`;
-                }
-
-                const toneHex = {violet:"#7c3cff",green:"#00d18f",orange:"#ff9f43",blue:"#4cc9f0",pink:"#ff5d73",gold:"#f4b942",teal:"#00b4a6",cyan:"#22d3ee"}[tone] || "#7c3cff";
-                return `<div class="p-3 border rounded-3 goal-card" data-id="${item._id}" style="background: var(--surface); border-color: var(--line) !important; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px ${toneHex}30'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 50%; background: var(--surface-soft); border: 1px solid var(--line); flex-shrink: 0;">
-                                <i class="bi ${icon}" style="font-size: 1.1rem; color: var(--${tone});"></i>
-                            </div>
-                            <div>
-                                <h4 class="fw-bold m-0" style="font-size: 1.05rem; color: var(--text);">${item.name}</h4>
-                                <small class="text-muted" style="font-size: 0.8rem;">${money(item.current_amount || 0)} saved of ${money(item.target_amount || 0)}</small>
-                                ${targetDateHtml ? `<div class="mt-1">${targetDateHtml}</div>` : ""}
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge ${badgeClass}" style="font-size: 0.78rem; padding: 5px 10px; border-radius: 6px;">${statusText}</span>
-                            <button class="btn btn-sm btn-ghost border-0 bg-transparent text-muted p-1" title="Edit goal" style="font-size: 0.95rem;"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-ghost delete-goal border-0 bg-transparent text-muted p-1" data-id="${item._id}" style="font-size: 0.95rem; color: #ef4444 !important;" title="Delete goal"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="progress mt-3" style="height: 10px; border-radius: 5px; background: var(--surface-soft);">
-                        <div class="progress-bar" role="progressbar" style="width: ${completion}%; border-radius: 5px; background-color: ${progressColor}; transition: width 0.6s ease;"></div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 0.82rem; color: var(--muted);">
-                        <span>${completion}% complete</span>
-                        <span>${isAchieved ? "Goal reached! 🎉" : money(remaining) + " to go"}</span>
-                    </div>
-                </div>`;
-            }).join("");
-
-            // Delete button — stop propagation so card click doesn't fire
-            container.querySelectorAll(".delete-goal").forEach(btn => {
-                btn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    goalIdToDelete = btn.dataset.id;
-                    document.getElementById("deleteGoalConfirmModalBackdrop")?.classList.add("open");
-                });
-            });
-
-            // Entire card click = open edit modal
-            container.querySelectorAll(".goal-card").forEach(card => {
-                card.addEventListener("click", () => {
-                    const id = card.dataset.id;
-                    const item = (window.loadedGoals || []).find(g => g._id === id);
-                    if (item) prefillAndOpenGoalModal(item, true);
-                });
-            });
-        }
+        renderGoals();
     } catch (err) {
         console.error("Error loading goals:", err);
+    }
+}
+
+function renderGoals() {
+    const emptyState = document.getElementById("emptyGoalsState");
+    const listPanel = document.getElementById("goalsListPanel");
+    const container = document.getElementById("goalsContainer");
+
+    if (!container) return;
+
+    const items = window.loadedGoals || [];
+
+    if (items.length === 0) {
+        if (emptyState) emptyState.classList.remove("d-none");
+        if (listPanel) listPanel.classList.add("d-none");
+    } else {
+        if (emptyState) emptyState.classList.add("d-none");
+        if (listPanel) listPanel.classList.remove("d-none");
+
+        const searchVal = (document.getElementById("goalSearch")?.value || "").toLowerCase();
+        const statusVal = document.getElementById("filterGoalStatus")?.value || "";
+
+        const filtered = items.filter(item => {
+            if (searchVal) {
+                const name = (item.name || "").toLowerCase();
+                if (!name.includes(searchVal)) return false;
+            }
+            if (statusVal) {
+                const isAchieved = (item.current_amount || 0) >= (item.target_amount || 1);
+                if (statusVal === "Achieved" && !isAchieved) return false;
+                if (statusVal === "In Progress" && isAchieved) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="p-4 text-center text-muted w-100" style="font-size: 0.95rem;">
+                    <i class="bi bi-search d-block mb-2" style="font-size: 1.5rem;"></i>
+                    No goals match your filters.
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map((item, index) => {
+            const completion = Math.min(Math.round((item.current_amount || 0) / (item.target_amount || 1) * 100), 100);
+            const isAchieved = (item.current_amount || 0) >= (item.target_amount || 1);
+            const remaining = Math.max(0, (item.target_amount || 0) - (item.current_amount || 0));
+
+            const tone = goalColors[index % goalColors.length];
+            const icon = goalIcons[index % goalIcons.length];
+
+            let badgeClass = "bg-success-subtle text-success";
+            let statusText = "On Track";
+            if (isAchieved) {
+                badgeClass = "bg-info-subtle text-info";
+                statusText = "🎉 Achieved";
+            } else if (completion >= 75) {
+                badgeClass = "bg-warning-subtle text-warning";
+                statusText = "Almost There";
+            }
+
+            const progressColor = isAchieved ? "var(--green)" : completion >= 75 ? "var(--orange)" : `var(--${tone})`;
+
+            // Target date display
+            let targetDateHtml = "";
+            if (item.target_date) {
+                const targetDate = new Date(item.target_date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+                const formattedDate = targetDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+                let daysLabel = "";
+                let daysColor = "var(--muted)";
+                if (!isAchieved) {
+                    if (diffDays < 0) {
+                        daysLabel = `<span style="color: var(--pink); font-weight: 700;"> • ${Math.abs(diffDays)}d overdue</span>`;
+                    } else if (diffDays === 0) {
+                        daysLabel = `<span style="color: var(--orange); font-weight: 700;"> • Due today!</span>`;
+                    } else if (diffDays <= 30) {
+                        daysLabel = `<span style="color: var(--orange); font-weight: 700;"> • ${diffDays}d left</span>`;
+                    } else {
+                        daysLabel = `<span style="color: var(--muted);"> • ${diffDays}d left</span>`;
+                    }
+                }
+                targetDateHtml = `<small style="font-size: 0.78rem; color: var(--muted);"><i class="bi bi-calendar3" style="margin-right:4px;"></i>${formattedDate}${daysLabel}</small>`;
+            }
+
+            const toneHex = {violet:"#7c3cff",green:"#00d18f",orange:"#ff9f43",blue:"#4cc9f0",pink:"#ff5d73",gold:"#f4b942",teal:"#00b4a6",cyan:"#22d3ee"}[tone] || "#7c3cff";
+            return `<div class="p-3 border rounded-3 goal-card" data-id="${item._id}" style="background: var(--surface); border-color: var(--line) !important; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px ${toneHex}30'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 50%; background: var(--surface-soft); border: 1px solid var(--line); flex-shrink: 0;">
+                            <i class="bi ${icon}" style="font-size: 1.1rem; color: var(--${tone});"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold m-0" style="font-size: 1.05rem; color: var(--text);">${item.name}</h4>
+                            <small class="text-muted" style="font-size: 0.8rem;">${money(item.current_amount || 0)} saved of ${money(item.target_amount || 0)}</small>
+                            ${targetDateHtml ? `<div class="mt-1">${targetDateHtml}</div>` : ""}
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${badgeClass}" style="font-size: 0.78rem; padding: 5px 10px; border-radius: 6px;">${statusText}</span>
+                        <button class="btn btn-sm btn-ghost border-0 bg-transparent text-muted p-1" title="Edit goal" style="font-size: 0.95rem;"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-ghost delete-goal border-0 bg-transparent text-muted p-1" data-id="${item._id}" style="font-size: 0.95rem; color: #ef4444 !important;" title="Delete goal"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="progress mt-3" style="height: 10px; border-radius: 5px; background: var(--surface-soft);">
+                    <div class="progress-bar" role="progressbar" style="width: ${completion}%; border-radius: 5px; background-color: ${progressColor}; transition: width 0.6s ease;"></div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 0.82rem; color: var(--muted);">
+                    <span>${completion}% complete</span>
+                    <span>${isAchieved ? "Goal reached! 🎉" : money(remaining) + " to go"}</span>
+                </div>
+            </div>`;
+        }).join("");
+
+        // Delete button — stop propagation so card click doesn't fire
+        container.querySelectorAll(".delete-goal").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                goalIdToDelete = btn.dataset.id;
+                document.getElementById("deleteGoalConfirmModalBackdrop")?.classList.add("open");
+            });
+        });
+
+        // Entire card click = open edit modal
+        container.querySelectorAll(".goal-card").forEach(card => {
+            card.addEventListener("click", () => {
+                const id = card.dataset.id;
+                const item = (window.loadedGoals || []).find(g => g._id === id);
+                if (item) prefillAndOpenGoalModal(item, true);
+            });
+        });
     }
 }
 
@@ -2419,6 +2978,16 @@ function setupGoals() {
         }
     });
 
+    document.getElementById("goalSearch")?.addEventListener("input", renderGoals);
+    document.getElementById("filterGoalStatus")?.addEventListener("change", renderGoals);
+    document.getElementById("resetGoalFiltersBtn")?.addEventListener("click", () => {
+        const s = document.getElementById("goalSearch");
+        if (s) s.value = "";
+        const st = document.getElementById("filterGoalStatus");
+        if (st) st.value = "";
+        renderGoals();
+    });
+
     loadGoals();
 }
 
@@ -2507,30 +3076,40 @@ async function setupAnalytics() {
         return grad;
     }
 
-    const defaultOpts = (title) => ({
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 1000, easing: "easeOutQuart" },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: "rgba(15,15,30,0.92)",
-                borderColor: "rgba(255,255,255,0.08)",
-                borderWidth: 1,
-                titleColor: "#fff",
-                bodyColor: "rgba(255,255,255,0.7)",
-                padding: 10,
-                cornerRadius: 10,
-                callbacks: {
-                    label: (ctx) => " ₹" + Number(ctx.parsed.y ?? ctx.parsed).toLocaleString("en-IN")
+    const defaultOpts = (title) => {
+        const isLight = document.documentElement.dataset.theme === "light";
+        const tickColor = isLight ? "rgba(30, 41, 59, 0.65)" : "rgba(255, 255, 255, 0.45)";
+        const gridColor = isLight ? "rgba(30, 41, 59, 0.08)" : "rgba(255, 255, 255, 0.04)";
+        const tooltipBg = isLight ? "rgba(255, 255, 255, 0.96)" : "rgba(15, 15, 30, 0.92)";
+        const tooltipBorder = isLight ? "rgba(0, 0, 0, 0.08)" : "rgba(255, 255, 255, 0.08)";
+        const tooltipTitle = isLight ? "#1e293b" : "#fff";
+        const tooltipBody = isLight ? "rgba(30, 41, 59, 0.7)" : "rgba(255, 255, 255, 0.7)";
+
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 1000, easing: "easeOutQuart" },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: tooltipBg,
+                    borderColor: tooltipBorder,
+                    borderWidth: 1,
+                    titleColor: tooltipTitle,
+                    bodyColor: tooltipBody,
+                    padding: 10,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: (ctx) => " ₹" + Number(ctx.parsed.y ?? ctx.parsed).toLocaleString("en-IN")
+                    }
                 }
+            },
+            scales: {
+                x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
+                y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 }, callback: v => "₹" + (v >= 1000 ? Math.round(v/1000) + "k" : v) } }
             }
-        },
-        scales: {
-            x: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "rgba(255,255,255,0.45)", font: { size: 11 } } },
-            y: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "rgba(255,255,255,0.45)", font: { size: 11 }, callback: v => "₹" + (v >= 1000 ? Math.round(v/1000) + "k" : v) } }
-        }
-    });
+        };
+    };
 
     // ── Income vs Expense chart ──────────────────────────
     const iveCanvas  = document.getElementById("comparisonChart");
@@ -2617,6 +3196,7 @@ async function setupAnalytics() {
             options: {
                 responsive: true, maintainAspectRatio: false,
                 cutout: "68%",
+                layout: { padding: 8 },
                 animation: { animateRotate: true, duration: 1200, easing: "easeOutQuart" },
                 plugins: {
                     legend: { display: false },
@@ -2634,11 +3214,17 @@ async function setupAnalytics() {
         if (legendEl) {
             const total = data.category_expenses.values.reduce((a,b) => a+b, 0);
             legendEl.innerHTML = data.category_expenses.labels.map((lbl, i) => {
-                const pct = total > 0 ? Math.round((data.category_expenses.values[i] / total) * 100) : 0;
-                return `<div style="display:flex;align-items:center;gap:8px;">
-                    <span style="width:10px;height:10px;border-radius:50%;background:${catColors[i % catColors.length]};flex-shrink:0;"></span>
-                    <span style="font-size:0.8rem;color:var(--text);flex:1;">${lbl}</span>
-                    <span style="font-size:0.78rem;color:var(--muted);font-weight:700;">${pct}%</span>
+                const val = data.category_expenses.values[i];
+                const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,0.05);">
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:${catColors[i % catColors.length]};flex-shrink:0;"></span>
+                        <span style="font-size:0.82rem;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lbl}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                        <strong style="font-size:0.82rem;color:var(--text);font-weight:700;">₹${val.toLocaleString("en-IN")}</strong>
+                        <span style="font-size:0.75rem;color:var(--muted);font-weight:700;background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:10px;">${pct}%</span>
+                    </div>
                 </div>`;
             }).join("");
         }
@@ -2647,19 +3233,112 @@ async function setupAnalytics() {
     }
 
     // ── Budget Utilization ───────────────────────────────
+    const filterBudgetMonth = document.getElementById("filterBudgetMonth");
     const budCanvas = document.getElementById("budgetChart");
     const budCtx    = budCanvas?.getContext("2d");
-    if (budCtx && data.budget_utilization.labels.length) {
-        new Chart(budCtx, {
-            type: "bar",
-            data: {
-                labels: data.budget_utilization.labels,
-                datasets: [{ label: "Budget", data: data.budget_utilization.values, backgroundColor: catColors, borderRadius: 8, borderSkipped: false }]
-            },
-            options: { ...defaultOpts("Budget"), plugins: { ...defaultOpts().plugins, legend: { display: false } } }
-        });
-    } else if (budCtx) {
-        budCtx.canvas.parentElement.innerHTML = `<p style="color:var(--muted);text-align:center;padding:40px 0;font-size:0.9rem;">No budgets created yet</p>`;
+    if (budCanvas && data.budget_utilization) {
+        const months = data.budget_utilization.months || [];
+        const budgetData = data.budget_utilization.data || {};
+        
+        if (months.length === 0) {
+            if (filterBudgetMonth) filterBudgetMonth.style.display = "none";
+            if (budCtx) budCtx.canvas.parentElement.innerHTML = `<p style="color:var(--muted);text-align:center;padding:40px 0;font-size:0.9rem;">No budgets created yet</p>`;
+        } else {
+            // Populate month dropdown options
+            if (filterBudgetMonth) {
+                filterBudgetMonth.style.display = "block";
+                filterBudgetMonth.innerHTML = months.map(m => {
+                    const [year, month] = m.split("-");
+                    const dateObj = new Date(year, month - 1);
+                    const label = dateObj.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                    return `<option value="${m}">${label}</option>`;
+                }).join("");
+                
+                // Select the last month by default (which is the most recent)
+                filterBudgetMonth.value = months[months.length - 1];
+            }
+            
+            let budgetChartInstance = null;
+            
+            const updateBudgetChart = (selectedMonth) => {
+                if (budgetChartInstance) {
+                    budgetChartInstance.destroy();
+                    budgetChartInstance = null;
+                }
+                
+                const monthBudgets = budgetData[selectedMonth] || [];
+                const placeholder = document.getElementById("budgetChartPlaceholder");
+                if (placeholder && budCanvas) {
+                    if (monthBudgets.length === 0) {
+                        placeholder.style.display = "flex";
+                        budCanvas.style.display = "none";
+                        return;
+                    } else {
+                        placeholder.style.display = "none";
+                        budCanvas.style.display = "block";
+                    }
+                }
+                
+                const labels = monthBudgets.map(b => b.category === "Overall" ? "Overall" : (categoryEmojiMap[b.category] || b.category));
+                const limits = monthBudgets.map(b => b.amount);
+                const spent = monthBudgets.map(b => b.spent);
+                
+                if (budCtx) {
+                    budgetChartInstance = new Chart(budCtx, {
+                        type: "bar",
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                { 
+                                    label: "Limit", 
+                                    data: limits, 
+                                    backgroundColor: "rgba(32, 136, 255, 0.12)", 
+                                    borderColor: "#2088ff",
+                                    borderWidth: 2,
+                                    borderRadius: 6,
+                                    barPercentage: 0.55,
+                                    categoryPercentage: 0.8,
+                                    grouped: false
+                                },
+                                { 
+                                    label: "Spent", 
+                                    data: spent, 
+                                    backgroundColor: "rgba(255, 61, 112, 0.85)", 
+                                    borderColor: "#ff3d70",
+                                    borderWidth: 1,
+                                    borderRadius: 6,
+                                    barPercentage: 0.35,
+                                    categoryPercentage: 0.8,
+                                    grouped: false
+                                }
+                            ]
+                        },
+                        options: { 
+                            ...defaultOpts("Budget"), 
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            plugins: { 
+                                ...defaultOpts().plugins, 
+                                legend: { 
+                                    display: true,
+                                    labels: { color: "var(--text)" }
+                                } 
+                            }
+                        }
+                    });
+                }
+            };
+            
+            // Initial render
+            updateBudgetChart(filterBudgetMonth?.value || months[months.length - 1]);
+            
+            // Dropdown change listener
+            filterBudgetMonth?.addEventListener("change", (e) => {
+                updateBudgetChart(e.target.value);
+            });
+        }
     }
 
     // ── Savings Goals animated bars ──────────────────────
@@ -3136,7 +3815,8 @@ function setupSettings() {
         { btn: "btnOpenPasswordModal", backdrop: "passwordModalBackdrop", closeBtn: "closePasswordModalBtn", cancelBtn: "cancelPasswordModalBtn" },
         { btn: "btnOpenCurrencyModal", backdrop: "currencyModalBackdrop", closeBtn: "closeCurrencyModalBtn", cancelBtn: "cancelCurrencyModalBtn" },
         { btn: "btnOpenBudgetModal", backdrop: "budgetLimitModalBackdrop", closeBtn: "closeBudgetModalBtn", cancelBtn: "cancelBudgetModalBtn" },
-        { btn: "btnOpenAiModal", backdrop: "aiToneModalBackdrop", closeBtn: "closeAiModalBtn", cancelBtn: "cancelAiModalBtn" }
+        { btn: "btnOpenAiModal", backdrop: "aiToneModalBackdrop", closeBtn: "closeAiModalBtn", cancelBtn: "cancelAiModalBtn" },
+        { btn: "btnOpenNotificationModal", backdrop: "notificationModalBackdrop", closeBtn: "closeNotificationModalBtn", cancelBtn: "cancelNotificationModalBtn" }
     ];
 
     modalMappings.forEach(mapping => {
@@ -3175,6 +3855,7 @@ function setupSettings() {
         if (openParam === "budget") document.getElementById("budgetLimitModalBackdrop")?.classList.add("open");
         if (openParam === "ai") document.getElementById("aiToneModalBackdrop")?.classList.add("open");
         if (openParam === "category") document.getElementById("categoryModalBackdrop")?.classList.add("open");
+        if (openParam === "notification") document.getElementById("notificationModalBackdrop")?.classList.add("open");
     }
 
     const profileForm = document.getElementById("profileSettingsForm");
@@ -3304,6 +3985,192 @@ function setupSettings() {
             } catch (err) {
                 toast(err.message || "Failed to update AI advisor tone", "error");
             }
+        });
+    }
+
+    // Notification Preferences Form Handler
+    const notificationForm = document.getElementById("notificationSettingsForm");
+    if (notificationForm) {
+        notificationForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+                notifications_enabled: document.getElementById("settingNotificationsEnabled").checked,
+                email_alerts_enabled: document.getElementById("settingEmailAlertsEnabled").checked,
+                weekly_summaries_enabled: document.getElementById("settingWeeklySummariesEnabled").checked,
+                budget_warnings_enabled: document.getElementById("settingBudgetWarningsEnabled").checked
+            };
+            
+            try {
+                const res = await api("/api/auth/me", {
+                    method: "PUT",
+                    body: JSON.stringify(payload)
+                });
+                if (res) {
+                    toast("Notification preferences updated successfully!");
+                    document.getElementById("notificationModalBackdrop")?.classList.remove("open");
+                    setTimeout(() => location.reload(), 800);
+                }
+            } catch (err) {
+                toast(err.message || "Failed to update notification settings", "error");
+            }
+        });
+    }
+
+    // Inline Change Password Form Handler (Security Panel)
+    const inlinePasswordForm = document.getElementById("inlineChangePasswordForm");
+    if (inlinePasswordForm) {
+        inlinePasswordForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById("inlineNewPasswordInput").value;
+            const confirmNewPassword = document.getElementById("inlineConfirmPasswordInput").value;
+            
+            if (newPassword !== confirmNewPassword) {
+                toast("New passwords do not match", "error");
+                return;
+            }
+            
+            try {
+                await api("/api/auth/change-password", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        new_password: newPassword
+                    })
+                });
+                toast("Password updated successfully!");
+                inlinePasswordForm.reset();
+            } catch (err) {
+                toast(err.message || "Failed to update password", "error");
+            }
+        });
+    }
+
+    // Inline Logout Account Button with Custom Dialog Modal
+    const inlineLogoutBtn = document.getElementById("inlineLogoutBtn");
+    const logoutModal = document.getElementById("logoutConfirmModalBackdrop");
+    const cancelLogoutBtn = document.getElementById("cancelLogoutModalBtn");
+    const confirmLogoutBtn = document.getElementById("confirmLogoutModalBtn");
+
+    if (inlineLogoutBtn && logoutModal) {
+        inlineLogoutBtn.addEventListener("click", () => {
+            logoutModal.classList.add("open");
+        });
+
+        const closeLogoutModal = () => {
+            logoutModal.classList.remove("open");
+        };
+
+        cancelLogoutBtn?.addEventListener("click", closeLogoutModal);
+        
+        logoutModal.addEventListener("click", (e) => {
+            if (e.target === logoutModal) closeLogoutModal();
+        });
+
+        confirmLogoutBtn?.addEventListener("click", async () => {
+            closeLogoutModal();
+            try {
+                await api("/api/auth/logout", { method: "POST" });
+                toast("Logged out successfully!");
+                setTimeout(() => window.location.href = "/login", 800);
+            } catch (err) {
+                toast(err.message || "Logout failed", "error");
+            }
+        });
+    }
+
+    // Inline Delete Account Button with Custom Dialog Modal
+    const inlineDeleteAccountBtn = document.getElementById("inlineDeleteAccountBtn");
+    const deleteAccountModal = document.getElementById("deleteAccountConfirmModalBackdrop");
+    const cancelDeleteAccountBtn = document.getElementById("cancelDeleteAccountModalBtn");
+    const confirmDeleteAccountBtn = document.getElementById("confirmDeleteAccountModalBtn");
+
+    if (inlineDeleteAccountBtn && deleteAccountModal) {
+        inlineDeleteAccountBtn.addEventListener("click", () => {
+            deleteAccountModal.classList.add("open");
+        });
+
+        const closeDeleteModal = () => {
+            deleteAccountModal.classList.remove("open");
+        };
+
+        cancelDeleteAccountBtn?.addEventListener("click", closeDeleteModal);
+        
+        deleteAccountModal.addEventListener("click", (e) => {
+            if (e.target === deleteAccountModal) closeDeleteModal();
+        });
+
+        confirmDeleteAccountBtn?.addEventListener("click", async () => {
+            closeDeleteModal();
+            try {
+                await api("/api/auth/delete-account", { method: "DELETE" });
+                toast("Your account and all associated data have been permanently deleted.", "success");
+                setTimeout(() => window.location.href = "/login", 1200);
+            } catch (err) {
+                toast(err.message || "Failed to delete account", "error");
+            }
+        });
+    }
+
+    // Main Settings Page Tabs Toggle (Account vs Categories vs Help)
+    const accountTabBtn = document.getElementById("accountTabBtn");
+    const categoriesTabBtn = document.getElementById("categoriesTabBtn");
+    const helpTabBtn = document.getElementById("helpTabBtn");
+    const accountTabPane = document.getElementById("accountTabPane");
+    const categoriesTabPane = document.getElementById("categoriesTabPane");
+    const helpTabPane = document.getElementById("helpTabPane");
+
+    if (accountTabBtn && categoriesTabBtn && helpTabBtn && accountTabPane && categoriesTabPane && helpTabPane) {
+        const resetTabs = () => {
+            [accountTabBtn, categoriesTabBtn, helpTabBtn].forEach(btn => {
+                btn.classList.remove("active", "fw-bold");
+                btn.style.setProperty("border-bottom", "none", "important");
+                btn.style.color = "var(--muted)";
+            });
+            [accountTabPane, categoriesTabPane, helpTabPane].forEach(pane => {
+                pane.classList.add("d-none");
+            });
+        };
+
+        accountTabBtn.addEventListener("click", () => {
+            resetTabs();
+            accountTabBtn.classList.add("active", "fw-bold");
+            accountTabBtn.style.setProperty("border-bottom", "2px solid var(--accent)", "important");
+            accountTabBtn.style.color = "var(--text)";
+            accountTabPane.classList.remove("d-none");
+        });
+
+        categoriesTabBtn.addEventListener("click", () => {
+            resetTabs();
+            categoriesTabBtn.classList.add("active", "fw-bold");
+            categoriesTabBtn.style.setProperty("border-bottom", "2px solid var(--accent)", "important");
+            categoriesTabBtn.style.color = "var(--text)";
+            categoriesTabPane.classList.remove("d-none");
+        });
+
+        helpTabBtn.addEventListener("click", () => {
+            resetTabs();
+            helpTabBtn.classList.add("active", "fw-bold");
+            helpTabBtn.style.setProperty("border-bottom", "2px solid var(--accent)", "important");
+            helpTabBtn.style.color = "var(--text)";
+            helpTabPane.classList.remove("d-none");
+        });
+        
+        // Handle opening specific tabs via URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const openParam = urlParams.get("open");
+        if (openParam === "category") {
+            categoriesTabBtn.click();
+        } else if (openParam === "help") {
+            helpTabBtn.click();
+        }
+    }
+
+    // Contact Creator Form Handler
+    const creatorContactForm = document.getElementById("creatorContactForm");
+    if (creatorContactForm) {
+        creatorContactForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            toast("Message sent successfully! The creator will review your feedback.");
+            creatorContactForm.reset();
         });
     }
     
@@ -4485,6 +5352,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupAdminTransactions();
     setupAdminReports();
     setupLandingCounters();
+    setupCustomCursor();
 
     // Global reveal observer
     initRevealObserver();
@@ -4495,4 +5363,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Re-observe after any dynamic content renders
     setTimeout(initRevealObserver, 1200);
 });
+
+// Custom cursor trail for the entire website
+function setupCustomCursor() {
+    const dot  = document.getElementById('curDot');
+    const ring = document.getElementById('curRing');
+    if (!dot || !ring) return;
+
+    let mx = -200, my = -200, rx = -200, ry = -200;
+
+    document.addEventListener('mousemove', e => {
+        mx = e.clientX; my = e.clientY;
+        dot.style.left = mx + 'px';
+        dot.style.top  = my + 'px';
+    });
+
+    // Spring-lag ring animation
+    function animateRing() {
+        rx += (mx - rx) * 0.15;
+        ry += (my - ry) * 0.15;
+        ring.style.left = rx + 'px';
+        ring.style.top  = ry + 'px';
+        requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Hover detection: ring morphs on hover over interactive elements
+    document.addEventListener('mouseover', e => {
+        if (e.target.closest('a, button, .tilt-card, .feature-card, [role="button"], .goal-card, .btn-lang-item, input, select, textarea')) {
+            ring.classList.add('hover');
+        } else {
+            ring.classList.remove('hover');
+        }
+    });
+
+    // Click pulse on dot
+    document.addEventListener('mousedown', () => dot.classList.add('click'));
+    document.addEventListener('mouseup',   () => dot.classList.remove('click'));
+}
+
 

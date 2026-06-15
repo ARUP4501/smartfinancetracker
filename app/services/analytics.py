@@ -2,6 +2,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from app.models.collections import budgets, goals, transactions
+from app.services.finance import build_budget_usage, month_key
 
 
 def monthly_points(user_id, transaction_type, months=6):
@@ -34,14 +35,44 @@ def analytics_payload(user_id):
     expense = monthly_points(user_id, "expense")
     budget_docs = list(budgets().find({"user_id": user_id}))
     goal_docs = list(goals().find({"user_id": user_id}))
+    
+    # Generate the past 6 months dynamically
+    now = datetime.now(timezone.utc)
+    default_months = []
+    for offset in range(6):
+        y = now.year
+        m = now.month - offset
+        while m <= 0:
+            m += 12
+            y -= 1
+        default_months.append(f"{y:04d}-{m:02d}")
+        
+    budget_months = set(item.get("month") for item in budget_docs if item.get("month"))
+    unique_months = sorted(list(set(default_months).union(budget_months)))
+    
+    budgets_by_month = {}
+    for m in unique_months:
+        raw_usage = build_budget_usage(user_id, m)
+        serialized_usage = []
+        for b in raw_usage:
+            serialized_usage.append({
+                "id": str(b.get("_id")),
+                "category": b.get("category", "Overall"),
+                "amount": float(b.get("amount", 0)),
+                "spent": float(b.get("spent", 0)),
+                "usage": float(b.get("usage", 0)),
+                "period": b.get("period", "monthly")
+            })
+        budgets_by_month[m] = serialized_usage
+
     return {
         "monthly_spending": expense,
         "monthly_income": income,
         "category_expenses": category_expenses(user_id),
         "income_vs_expense": {"labels": income["labels"], "income": income["values"], "expense": expense["values"]},
         "budget_utilization": {
-            "labels": [item.get("category", "Overall") for item in budget_docs],
-            "values": [item.get("amount", 0) for item in budget_docs],
+            "months": unique_months,
+            "data": budgets_by_month
         },
         "savings_growth": {
             "labels": [item.get("name") for item in goal_docs],

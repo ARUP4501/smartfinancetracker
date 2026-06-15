@@ -31,6 +31,19 @@
     {% endfor %}
 </section>
 
+<!-- AI Daily Advice Banner (Dynamic Client-Side) -->
+<div class="row mb-4 reveal" id="aiAdviceSection" style="margin-top: 24px; display: none;">
+    <div class="col-12">
+        <div id="aiAdviceCard" class="panel p-4 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" 
+             style="background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(32, 136, 255, 0.08)); 
+                    border-color: var(--accent) !important; 
+                    box-shadow: 0 0 20px rgba(124, 77, 255, 0.15);
+                    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);">
+             <!-- Rendered dynamically via JS -->
+        </div>
+    </div>
+</div>
+
 <section class="dashboard-main-grid">
     <article class="panel budget-panel reveal" style="--delay: 120ms">
         <div class="panel-head"><h2>Budget Utilization</h2><a href="{{ url_for('web.budgets_page') }}">View Budgets <i class="bi bi-arrow-right"></i></a></div>

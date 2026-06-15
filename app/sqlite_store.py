@@ -182,6 +182,8 @@ def matches(item, query):
                 return False
             if "$lt" in expected and (actual is None or actual >= expected["$lt"]):
                 return False
+            if "$ne" in expected and actual == expected["$ne"]:
+                return False
         elif str(actual) != str(expected):
             return False
     return True

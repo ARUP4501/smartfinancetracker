@@ -198,3 +198,10 @@ def local_fallback_chat(message, income, expense, savings_rate):
         return "Checking budgets... We suggest setting category-specific limits on Food and Shopping in the **Budgets** panel to get automatically warned at 80% and 90% usage."
     else:
         return f"I've scanned your wallet. Your active figures: Income: **{money(income)}**, Expenses: **{money(expense)}**, Savings Rate: **{savings_rate}%**. Please set category limits in Budgets for active tracking."
+
+
+@analytics_bp.get("/daily-advice")
+@jwt_required()
+def daily_advice():
+    from app.services.insights import get_daily_advice
+    return ok(get_daily_advice(get_jwt_identity()))

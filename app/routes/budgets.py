@@ -23,12 +23,26 @@ def create_budget():
     amount = float(payload.get("amount", 0))
     if amount <= 0:
         return fail("Budget amount must be greater than zero.", 422)
+    
+    user_id = get_jwt_identity()
+    category = payload.get("category") or "Overall"
+    month = payload.get("month") or month_key()
+
+    # Check if a budget with the same category and month already exists for this user
+    existing = budgets().find_one({
+        "user_id": user_id,
+        "category": category,
+        "month": month
+    })
+    if existing:
+        return fail(f"A budget for '{category}' already exists for this month ({month}). You can edit the existing budget.", 400)
+
     doc = {
-        "user_id": get_jwt_identity(),
-        "category": payload.get("category") or "Overall",
+        "user_id": user_id,
+        "category": category,
         "amount": amount,
         "period": payload.get("period") or "monthly",
-        "month": payload.get("month") or month_key(),
+        "month": month,
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }
@@ -40,13 +54,31 @@ def create_budget():
 @jwt_required()
 def update_budget(budget_id):
     payload = request.get_json() or {}
+    amount = float(payload.get("amount", 0))
+    if amount <= 0:
+        return fail("Budget amount must be greater than zero.", 422)
+    
+    category = payload.get("category") or "Overall"
+    month = payload.get("month") or month_key()
+    user_id = get_jwt_identity()
+
+    # Check if another budget with the same category and month already exists
+    existing = budgets().find_one({
+        "_id": {"$ne": budget_id},
+        "user_id": user_id,
+        "category": category,
+        "month": month
+    })
+    if existing:
+        return fail(f"A budget for '{category}' already exists for this month ({month}). You can edit the existing budget.", 400)
+
     budgets().update_one(
-        {"_id": budget_id, "user_id": get_jwt_identity()},
+        {"_id": budget_id, "user_id": user_id},
         {"$set": {
-            "category": payload.get("category") or "Overall",
-            "amount": float(payload.get("amount", 0)),
+            "category": category,
+            "amount": amount,
             "period": payload.get("period") or "monthly",
-            "month": payload.get("month") or month_key(),
+            "month": month,
             "updated_at": datetime.now(timezone.utc)
         }},
     )
