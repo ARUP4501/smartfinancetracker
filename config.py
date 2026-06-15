@@ -17,3 +17,12 @@ class Config:
     SQLITE_DATABASE = os.getenv("SQLITE_DATABASE", "finance.sqlite3")
     APP_NAME = os.getenv("APP_NAME", "Smart Financial Management System")
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@smartfinance.local").lower()
+
+    # SMTP and OTP configurations
+    SMTP_SERVER = os.getenv("SMTP_SERVER")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+    SMTP_SENDER = os.getenv("SMTP_SENDER") or SMTP_USERNAME or "noreply@smartfinance.local"
+    OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
+

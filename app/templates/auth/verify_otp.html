@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Verify OTP | SmartFinance{% endblock %}
+{% block body %}
+<main class="auth-screen">
+    <section class="auth-panel">
+        <a href="/" class="brand-mark">SmartFinance</a>
+        <h1>Verify Email</h1>
+        <p class="text-muted" style="font-size: 0.95rem; margin-bottom: 24px;">
+            We have sent a 6-digit verification code to <strong id="displayEmail" class="text-light">your email</strong>. Please enter it below to activate your account.
+        </p>
+        
+        <form id="otpForm" class="stack-form">
+            <input type="hidden" id="emailInput" name="email">
+            <div class="otp-input-container d-flex justify-content-between gap-2" style="margin-bottom: 24px;">
+                <input class="form-control form-control-lg text-center otp-box" type="text" pattern="\d" maxlength="1" required style="font-size: 1.8rem; font-weight: 800; color: var(--accent) !important; width: 48px; height: 54px; border-radius: 10px; padding: 0;">
+                <input class="form-control form-control-lg text-center otp-box" type="text" pattern="\d" maxlength="1" required style="font-size: 1.8rem; font-weight: 800; color: var(--accent) !important; width: 48px; height: 54px; border-radius: 10px; padding: 0;">
+                <input class="form-control form-control-lg text-center otp-box" type="text" pattern="\d" maxlength="1" required style="font-size: 1.8rem; font-weight: 800; color: var(--accent) !important; width: 48px; height: 54px; border-radius: 10px; padding: 0;">
+                <input class="form-control form-control-lg text-center otp-box" type="text" pattern="\d" maxlength="1" required style="font-size: 1.8rem; font-weight: 800; color: var(--accent) !important; width: 48px; height: 54px; border-radius: 10px; padding: 0;">
+                <input class="form-control form-control-lg text-center otp-box" type="text" pattern="\d" maxlength="1" required style="font-size: 1.8rem; font-weight: 800; color: var(--accent) !important; width: 48px; height: 54px; border-radius: 10px; padding: 0;">
+                <input class="form-control form-control-lg text-center otp-box" type="text" pattern="\d" maxlength="1" required style="font-size: 1.8rem; font-weight: 800; color: var(--accent) !important; width: 48px; height: 54px; border-radius: 10px; padding: 0;">
+            </div>
+            
+            <button id="verifyBtn" class="btn btn-accent btn-lg w-100" type="submit" style="margin-top: 10px;">
+                Verify Code
+            </button>
+        </form>
+        
+        <div class="auth-links flex-column gap-2 text-center align-items-center mt-4">
+            <span class="text-muted" style="font-size: 0.85rem;">Didn't receive the email?</span>
+            <button id="resendBtn" class="link-button text-accent fw-bold" style="font-size: 0.9rem; text-decoration: none; background: none; border: none; padding: 0;">
+                Resend OTP
+            </button>
+            <span id="cooldownTimer" class="text-muted" style="font-size: 0.85rem; display: none;">Resend code in <b id="timerCount">30</b>s</span>
+        </div>
+        
+        <div id="authMessage" class="form-message text-center mt-3"></div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('web.login_page') }}" class="text-muted" style="font-size: 0.85rem; text-decoration: none;">Back to Login</a>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email");
+    
+    if (!email) {
+        // Redirect to login if no email parameter is provided
+        window.location.href = "/login";
+        return;
+    }
+    
+    document.getElementById("displayEmail").textContent = email;
+    document.getElementById("emailInput").value = email;
+    
+    const otpForm = document.getElementById("otpForm");
+    const otpBoxes = document.querySelectorAll(".otp-box");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const resendBtn = document.getElementById("resendBtn");
+    const cooldownTimer = document.getElementById("cooldownTimer");
+    const timerCount = document.getElementById("timerCount");
+    const authMessage = document.getElementById("authMessage");
+    
+    // Auto-focus first input box
+    if (otpBoxes[0]) otpBoxes[0].focus();
+    
+    // Restrict input to digits and auto-tab next/previous
+    otpBoxes.forEach((box, index) => {
+        box.addEventListener("input", (e) => {
+            // Replace any non-digit character
+            box.value = box.value.replace(/[^0-9]/g, "");
+            
+            if (box.value.length === 1) {
+                if (index < otpBoxes.length - 1) {
+                    otpBoxes[index + 1].focus();
+                }
+            }
+            updateVerifyButtonState();
+        });
+        
+        box.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace") {
+                if (box.value.length === 0 && index > 0) {
+                    otpBoxes[index - 1].focus();
+                    otpBoxes[index - 1].value = "";
+                } else {
+                    box.value = "";
+                }
+                updateVerifyButtonState();
+                e.preventDefault();
+            } else if (e.key === "ArrowLeft" && index > 0) {
+                otpBoxes[index - 1].focus();
+            } else if (e.key === "ArrowRight" && index < otpBoxes.length - 1) {
+                otpBoxes[index + 1].focus();
+            }
+        });
+        
+        box.addEventListener("paste", (e) => {
+            const pasteData = (e.clipboardData || window.clipboardData).getData("text").trim();
+            if (/^\d{6}$/.test(pasteData)) {
+                for (let i = 0; i < otpBoxes.length; i++) {
+                    otpBoxes[i].value = pasteData[i];
+                }
+                otpBoxes[otpBoxes.length - 1].focus();
+                updateVerifyButtonState();
+                e.preventDefault();
+            }
+        });
+    });
+
+    function getCombinedOtp() {
+        let code = "";
+        otpBoxes.forEach(box => {
+            code += box.value;
+        });
+        return code;
+    }
+
+    function updateVerifyButtonState() {
+        const fullOtp = getCombinedOtp();
+        if (fullOtp.length === 6) {
+            verifyBtn.classList.add("ready-to-submit");
+        } else {
+            verifyBtn.classList.remove("ready-to-submit");
+        }
+    }
+
+    // Custom fetch helper that handles API response and throws errors
+    async function apiCall(url, options = {}) {
+        const response = await fetch(url, {
+            method: options.method || "GET",
+            headers: { "Content-Type": "application/json" },
+            body: options.body
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || "Something went wrong");
+        }
+        return data;
+    }
+
+    // Handle verification
+    otpForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const code = getCombinedOtp();
+        if (code.length !== 6) {
+            authMessage.textContent = "Please enter all 6 digits.";
+            authMessage.className = "form-message text-center text-danger mt-3";
+            return;
+        }
+        
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = "Verifying...";
+        authMessage.textContent = "";
+        
+        try {
+            await apiCall("/api/auth/verify-otp", {
+                method: "POST",
+                body: JSON.stringify({ email, otp: code })
+            });
+            
+            authMessage.textContent = "Verification successful! Redirecting...";
+            authMessage.className = "form-message text-center text-success mt-3";
+            
+            // Redirect after a brief delay
+            setTimeout(() => {
+                window.location.href = "/onboarding";
+            }, 1000);
+            
+        } catch (error) {
+            authMessage.textContent = error.message;
+            authMessage.className = "form-message text-center text-danger mt-3";
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = "Verify Code";
+        }
+    });
+
+    // Cooldown helper for resend button
+    let cooldownActive = false;
+    
+    function startCooldown(seconds) {
+        cooldownActive = true;
+        resendBtn.style.display = "none";
+        cooldownTimer.style.display = "inline";
+        timerCount.textContent = seconds;
+        
+        const interval = setInterval(() => {
+            seconds--;
+            timerCount.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                cooldownActive = false;
+                resendBtn.style.display = "inline";
+                cooldownTimer.style.display = "none";
+            }
+        }, 1000);
+    }
+    
+    // Start cooldown timer automatically on page load
+    startCooldown(30);
+    
+    // Handle resending OTP
+    resendBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        if (cooldownActive) return;
+        
+        authMessage.textContent = "";
+        resendBtn.disabled = true;
+        resendBtn.textContent = "Sending...";
+        
+        try {
+            await apiCall("/api/auth/resend-otp", {
+                method: "POST",
+                body: JSON.stringify({ email })
+            });
+            
+            authMessage.textContent = "A new verification code has been sent.";
+            authMessage.className = "form-message text-center text-success mt-3";
+            startCooldown(30);
+            
+        } catch (error) {
+            authMessage.textContent = error.message;
+            authMessage.className = "form-message text-center text-danger mt-3";
+        } finally {
+            resendBtn.disabled = false;
+            resendBtn.textContent = "Resend OTP";
+        }
+    });
+});
+</script>
+{% endblock %}

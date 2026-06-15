@@ -10,30 +10,112 @@
 {% endblock %}
 
 {% block page_content %}
+<style>
+    /* goals page kpi card icons styles */
+    .kpi-metric-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    }
+    
+    .kpi-metric-card-icon.blue {
+        background: rgba(76, 201, 240, 0.1);
+        color: #4cc9f0;
+        border: 1px solid rgba(76, 201, 240, 0.15);
+    }
+    .kpi-metric-card:hover .kpi-metric-card-icon.blue {
+        background: rgba(76, 201, 240, 0.2);
+        box-shadow: 0 0 12px rgba(76, 201, 240, 0.25);
+    }
+
+    .kpi-metric-card-icon.orange {
+        background: rgba(255, 159, 67, 0.1);
+        color: #ff9f43;
+        border: 1px solid rgba(255, 159, 67, 0.15);
+    }
+    .kpi-metric-card:hover .kpi-metric-card-icon.orange {
+        background: rgba(255, 159, 67, 0.2);
+        box-shadow: 0 0 12px rgba(255, 159, 67, 0.25);
+    }
+
+    .kpi-metric-card-icon.green {
+        background: rgba(0, 209, 143, 0.1);
+        color: var(--green);
+        border: 1px solid rgba(0, 209, 143, 0.15);
+    }
+    .kpi-metric-card:hover .kpi-metric-card-icon.green {
+        background: rgba(0, 209, 143, 0.2);
+        box-shadow: 0 0 12px rgba(0, 209, 143, 0.25);
+    }
+
+    .kpi-metric-card-icon.violet {
+        background: rgba(124, 77, 255, 0.1);
+        color: #7c3cff;
+        border: 1px solid rgba(124, 77, 255, 0.15);
+    }
+    .kpi-metric-card:hover .kpi-metric-card-icon.violet {
+        background: rgba(124, 77, 255, 0.2);
+        box-shadow: 0 0 12px rgba(124, 77, 255, 0.25);
+    }
+</style>
+
 <!-- KPI Stats Row -->
 <section class="row row-cols-1 row-cols-md-4 g-3 mb-4 mt-1">
     <div class="col">
         <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-blue" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
-            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Goals</small>
-            <strong id="totalGoalsVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">0</strong>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Goals</small>
+                    <strong id="totalGoalsVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">0</strong>
+                </div>
+                <div class="kpi-metric-card-icon blue">
+                    <i class="bi bi-bullseye"></i>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col">
         <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-orange" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
-            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Target</small>
-            <strong id="totalTargetVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">₹0</strong>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Target</small>
+                    <strong id="totalTargetVal" style="font-size: 1.68rem; font-weight: 900; color: var(--text);">₹0</strong>
+                </div>
+                <div class="kpi-metric-card-icon orange">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col">
         <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-green" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
-            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Saved So Far</small>
-            <strong id="totalSavedVal" style="font-size: 1.68rem; font-weight: 900; color: var(--green);">₹0</strong>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Saved So Far</small>
+                    <strong id="totalSavedVal" style="font-size: 1.68rem; font-weight: 900; color: var(--green);">₹0</strong>
+                </div>
+                <div class="kpi-metric-card-icon green">
+                    <i class="bi bi-piggy-bank-fill"></i>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col">
         <div class="p-3 border rounded-3 kpi-metric-card kpi-metric-card-glow-violet" style="background: var(--surface); border-color: var(--line) !important; min-height: 96px;">
-            <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Achieved</small>
-            <strong id="totalAchievedVal" style="font-size: 1.68rem; font-weight: 900; color: var(--violet);">0</strong>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <small class="text-muted fw-bold d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Achieved</small>
+                    <strong id="totalAchievedVal" style="font-size: 1.68rem; font-weight: 900; color: var(--violet);">0</strong>
+                </div>
+                <div class="kpi-metric-card-icon violet">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -55,6 +137,21 @@
     <div class="panel-head border-bottom pb-3 mb-4" style="border-color: var(--line) !important;">
         <h2>Active Goals</h2>
     </div>
+
+    <!-- Filter Bar -->
+    <div class="txn-filter-bar mb-4">
+        <div class="filter-input-search">
+            <i class="bi bi-search"></i>
+            <input id="goalSearch" placeholder="Search by goal name...">
+        </div>
+        <select class="form-select filter-select" id="filterGoalStatus">
+            <option value="">🏷️ All Statuses</option>
+            <option value="In Progress">⏳ In Progress</option>
+            <option value="Achieved">🏆 Achieved</option>
+        </select>
+        <button class="btn btn-link text-decoration-none text-muted" id="resetGoalFiltersBtn" type="button">Reset</button>
+    </div>
+
     <div class="d-flex flex-column gap-3" id="goalsContainer">
         <!-- Goals populated dynamically -->
     </div>

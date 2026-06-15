@@ -363,6 +363,9 @@
         </div>
         <form id="fcForm" class="chat-full-form">
             <input type="text" id="fcInput" class="chat-full-input" placeholder="Type your question..." autocomplete="off" required>
+            <button type="button" id="fcMicBtn" class="btn btn-ghost btn-icon-only btn-mic" title="Speak question" style="min-width: 48px; height: 48px; border-radius: 14px; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; padding: 0;">
+                <i class="bi bi-mic-fill"></i>
+            </button>
             <button type="submit" class="chat-full-send"><i class="bi bi-send-fill"></i></button>
         </form>
     </div>
@@ -375,6 +378,84 @@
     const input = document.getElementById("fcInput");
     const sendBtn = form ? form.querySelector("button[type=submit]") : null;
     if (!chatBox || !form || !input) return;
+
+    // AI Chat Voice Input
+    const fcMicBtn = document.getElementById("fcMicBtn");
+    if (fcMicBtn) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            fcMicBtn.style.display = "none";
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-IN";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            
+            let isListening = false;
+            
+            fcMicBtn.addEventListener("click", () => {
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.error("Failed to start speech recognition:", e);
+                    }
+                }
+            });
+            
+            recognition.onstart = () => {
+                isListening = true;
+                fcMicBtn.classList.add("listening");
+                fcMicBtn.innerHTML = '<i class="bi bi-record-fill"></i>';
+                if (typeof showVoiceOverlay === "function") {
+                    showVoiceOverlay(() => {
+                        recognition.abort();
+                    });
+                }
+            };
+            
+            recognition.onend = () => {
+                isListening = false;
+                fcMicBtn.classList.remove("listening");
+                fcMicBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+                if (typeof hideVoiceOverlay === "function") {
+                    hideVoiceOverlay();
+                }
+            };
+            
+            recognition.onresult = (event) => {
+                const speechToText = event.results[0][0].transcript;
+                if (typeof toast === "function") {
+                    toast(`Recognized: "${speechToText}"`);
+                }
+                if (typeof hideVoiceOverlay === "function") {
+                    hideVoiceOverlay();
+                }
+                if (input) {
+                    input.value = speechToText;
+                    sendMessage(speechToText);
+                }
+            };
+            
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                if (typeof hideVoiceOverlay === "function") {
+                    hideVoiceOverlay();
+                }
+                if (event.error === "not-allowed") {
+                    if (typeof toast === "function") {
+                        toast("Microphone access denied. Please grant permission in browser settings.", "error");
+                    }
+                } else if (event.error !== "no-speech") {
+                    if (typeof toast === "function") {
+                        toast("Speech recognition failed: " + event.error, "error");
+                    }
+                }
+            };
+        }
+    }
 
     const userEmail = "{{ claims.email }}";
     const userSuffix = userEmail ? "_" + btoa(userEmail).replace(/=/g, "") : "";
@@ -551,6 +632,14 @@
         loadSession(savedId);
     } else {
         activeId = genId();
+    }
+
+    // Auto-trigger prompt from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPrompt = urlParams.get("prompt");
+    if (initialPrompt) {
+        sendMessage(initialPrompt);
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     // --- Events ---

@@ -43,6 +43,24 @@ def register_page():
     return render_template("auth/register.html")
 
 
+@web_bp.get("/verify-otp")
+def verify_otp_page():
+    return render_template("auth/verify_otp.html")
+
+
+@web_bp.get("/password/reset")
+def reset_password_page():
+    return render_template("auth/reset_password.html")
+
+
+@web_bp.get("/password/reset-requested")
+def reset_requested_page():
+    return render_template("auth/reset_requested.html")
+
+
+
+
+
 @web_bp.get("/onboarding")
 def onboarding_page():
     try:
@@ -66,7 +84,12 @@ def dashboard():
         return redirect(url_for("web.onboarding_page"))
     
     from flask_jwt_extended import get_jwt_identity
-    return render_template("pages/dashboard.html", summary=dashboard_summary(get_jwt_identity()), claims=claims)
+    user_id = get_jwt_identity()
+    return render_template(
+        "pages/dashboard.html",
+        summary=dashboard_summary(user_id),
+        claims=claims
+    )
 
 
 @web_bp.get("/transactions")

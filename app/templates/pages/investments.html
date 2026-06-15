@@ -104,6 +104,80 @@
         background: var(--pink);
     }
 
+    /* metric card glowing icons */
+    .metric-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    }
+    
+    .metric-card-icon.invested {
+        background: rgba(152, 89, 43, 0.1);
+        color: #98592b;
+        border: 1px solid rgba(152, 89, 43, 0.15);
+    }
+    .metric-card:hover .metric-card-icon.invested {
+        background: rgba(152, 89, 43, 0.2);
+        box-shadow: 0 0 12px rgba(152, 89, 43, 0.25);
+    }
+
+    .metric-card-icon.current {
+        background: rgba(124, 77, 255, 0.1);
+        color: var(--accent);
+        border: 1px solid rgba(124, 77, 255, 0.15);
+    }
+    .metric-card:hover .metric-card-icon.current {
+        background: rgba(124, 77, 255, 0.2);
+        box-shadow: 0 0 12px rgba(124, 77, 255, 0.25);
+    }
+
+    .metric-card-icon.returns {
+        background: rgba(0, 209, 143, 0.1);
+        color: var(--green);
+        border: 1px solid rgba(0, 209, 143, 0.15);
+        transition: all 0.25s ease;
+    }
+    .metric-card:hover .metric-card-icon.returns {
+        background: rgba(0, 209, 143, 0.2);
+        box-shadow: 0 0 12px rgba(0, 209, 143, 0.25);
+    }
+
+    .metric-card-returns.neg-hover .metric-card-icon.returns {
+        background: rgba(255, 61, 112, 0.1) !important;
+        color: var(--pink) !important;
+        border-color: rgba(255, 61, 112, 0.15) !important;
+    }
+    .metric-card-returns.neg-hover:hover .metric-card-icon.returns {
+        background: rgba(255, 61, 112, 0.2) !important;
+        box-shadow: 0 0 12px rgba(255, 61, 112, 0.25) !important;
+    }
+
+    .metric-card-icon.pct {
+        background: rgba(0, 209, 143, 0.1);
+        color: var(--green);
+        border: 1px solid rgba(0, 209, 143, 0.15);
+        transition: all 0.25s ease;
+    }
+    .metric-card:hover .metric-card-icon.pct {
+        background: rgba(0, 209, 143, 0.2);
+        box-shadow: 0 0 12px rgba(0, 209, 143, 0.25);
+    }
+
+    .metric-card-pct.neg-hover .metric-card-icon.pct {
+        background: rgba(255, 61, 112, 0.1) !important;
+        color: var(--pink) !important;
+        border-color: rgba(255, 61, 112, 0.15) !important;
+    }
+    .metric-card-pct.neg-hover:hover .metric-card-icon.pct {
+        background: rgba(255, 61, 112, 0.2) !important;
+        box-shadow: 0 0 12px rgba(255, 61, 112, 0.25) !important;
+    }
+
     .metric-card-label {
         font-size: 0.75rem;
         font-weight: 700;
@@ -470,41 +544,82 @@
     <!-- Summary Cards -->
     <div class="metrics-row">
         <div class="metric-card metric-card-invested">
-            <span class="metric-card-label">Invested</span>
-            <p id="totalInvestedVal" class="metric-card-value">₹0</p>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <span class="metric-card-label">Invested</span>
+                    <p id="totalInvestedVal" class="metric-card-value">₹0</p>
+                </div>
+                <div class="metric-card-icon invested">
+                    <i class="bi bi-piggy-bank-fill"></i>
+                </div>
+            </div>
         </div>
         <div class="metric-card metric-card-current">
-            <span class="metric-card-label">Current Value</span>
-            <p id="totalCurrentVal" class="metric-card-value">₹0</p>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <span class="metric-card-label">Current Value</span>
+                    <p id="totalCurrentVal" class="metric-card-value">₹0</p>
+                </div>
+                <div class="metric-card-icon current">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
         </div>
         <div id="returnsCard" class="metric-card metric-card-returns">
-            <span class="metric-card-label">Returns</span>
-            <p id="totalReturnsVal" class="metric-card-value">+₹0</p>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <span class="metric-card-label">Returns</span>
+                    <p id="totalReturnsVal" class="metric-card-value">+₹0</p>
+                </div>
+                <div class="metric-card-icon returns" id="returnsIcon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+            </div>
         </div>
         <div id="pctCard" class="metric-card metric-card-pct">
-            <span class="metric-card-label">Returns %</span>
-            <p id="returnsPctVal" class="metric-card-value">+0%</p>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div>
+                    <span class="metric-card-label">Returns %</span>
+                    <p id="returnsPctVal" class="metric-card-value">+0%</p>
+                </div>
+                <div class="metric-card-icon pct" id="pctIcon">
+                    <i class="bi bi-percent"></i>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Holdings Section -->
     <div class="portfolio-panel">
-        <div class="portfolio-header">
+        <div class="portfolio-header mb-3">
             <div class="portfolio-title-group">
                 <h3 id="holdingsTitle">Holdings (0)</h3>
             </div>
-            
-            <div class="filter-pills" id="filterContainer">
-                <span class="filter-pill active" data-filter="All">All</span>
-                <span class="filter-pill" data-filter="MF">MF</span>
-                <span class="filter-pill" data-filter="Stocks">Stocks</span>
-                <span class="filter-pill" data-filter="SIP">SIP</span>
-                <span class="filter-pill" data-filter="FD">FD</span>
-                <span class="filter-pill" data-filter="PPF">PPF</span>
-                <span class="filter-pill" data-filter="NPS">NPS</span>
-                <span class="filter-pill" data-filter="Gold">Gold</span>
-                <span class="filter-pill" data-filter="Other">Other</span>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="txn-filter-bar mb-4">
+            <div class="filter-input-search">
+                <i class="bi bi-search"></i>
+                <input id="investSearch" placeholder="Search by name...">
             </div>
+            <select class="form-select filter-select" id="filterInvestType">
+                <option value="">📁 All Types</option>
+                <option value="MF">📈 Mutual Fund (MF)</option>
+                <option value="Stocks">📊 Stocks</option>
+                <option value="SIP">🗓️ SIP</option>
+                <option value="FD">🏦 Fixed Deposit (FD)</option>
+                <option value="PPF">🛡️ PPF</option>
+                <option value="NPS">👵 NPS</option>
+                <option value="Gold">🟡 Gold</option>
+                <option value="Other">💳 Other</option>
+            </select>
+            <select class="form-select filter-select" id="filterInvestStatus">
+                <option value="">📈 All Returns</option>
+                <option value="positive">🟢 Positive Returns</option>
+                <option value="negative">🔴 Negative Returns</option>
+            </select>
+            <button class="btn btn-link text-decoration-none text-muted" id="resetInvestFiltersBtn" type="button">Reset</button>
         </div>
 
         <div class="investment-table-wrapper">
@@ -715,9 +830,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Render logic
     const render = () => {
+        const searchText = (document.getElementById("investSearch")?.value || "").toLowerCase();
+        const typeFilter = document.getElementById("filterInvestType")?.value || "";
+        const returnsFilter = document.getElementById("filterInvestStatus")?.value || "";
+
         const filtered = allInvestments.filter(item => {
-            if (activeFilter === "All") return true;
-            return item.type === activeFilter;
+            if (searchText) {
+                const name = (item.name || "").toLowerCase();
+                const type = (item.type || "").toLowerCase();
+                if (!name.includes(searchText) && !type.includes(searchText)) return false;
+            }
+            if (typeFilter && item.type !== typeFilter) return false;
+            if (returnsFilter) {
+                const invested = parseFloat(item.invested_amount || 0);
+                const current = parseFloat(item.current_value || 0);
+                const diff = current - invested;
+                if (returnsFilter === "positive" && diff < 0) return false;
+                if (returnsFilter === "negative" && diff >= 0) return false;
+            }
+            return true;
         });
 
         holdingsTitle.textContent = `Holdings (${filtered.length})`;
@@ -822,6 +953,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
+                // Update return icons dynamically based on gain/loss
+                const returnsIcon = document.getElementById("returnsIcon");
+                if (returnsIcon) {
+                    if (sum.total_returns >= 0) {
+                        returnsIcon.innerHTML = '<i class="bi bi-graph-up-arrow"></i>';
+                    } else {
+                        returnsIcon.innerHTML = '<i class="bi bi-graph-down-arrow"></i>';
+                    }
+                }
+
                 render();
             }
         } catch (err) {
@@ -829,14 +970,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // Filter Navigation
-    document.querySelectorAll(".filter-pill").forEach(pill => {
-        pill.addEventListener("click", () => {
-            document.querySelectorAll(".filter-pill").forEach(x => x.classList.remove("active"));
-            pill.classList.add("active");
-            activeFilter = pill.dataset.filter;
-            render();
-        });
+    // Filter Navigation & Listeners
+    document.getElementById("investSearch")?.addEventListener("input", render);
+    document.getElementById("filterInvestType")?.addEventListener("change", render);
+    document.getElementById("filterInvestStatus")?.addEventListener("change", render);
+    document.getElementById("resetInvestFiltersBtn")?.addEventListener("click", () => {
+        const s = document.getElementById("investSearch");
+        if (s) s.value = "";
+        const t = document.getElementById("filterInvestType");
+        if (t) t.value = "";
+        const r = document.getElementById("filterInvestStatus");
+        if (r) r.value = "";
+        render();
     });
 
     // Form Submission
