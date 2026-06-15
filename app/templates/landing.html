@@ -168,6 +168,16 @@
     #scrollWidget:hover .pct-text { display: none; }
     #scrollWidget:hover .up-arrow { display: block; }
 
+    /* ── Mobile: smaller scroll widget so it doesn't overlap content ── */
+    @media (max-width: 767px) {
+        #scrollWidget {
+            width: 44px;
+            height: 44px;
+            bottom: 16px;
+            right: 14px;
+        }
+    }
+
     /* ── Square Border Progress (viewport frame) ── */
     #squareBorderProgress {
         position: fixed;
@@ -1053,6 +1063,7 @@
                         <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ru">🇷🇺 Русский</button></li>
                         <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="ko">🇰🇷 한국어</button></li>
                         <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="it">🇮🇹 Italiano</button></li>
+                        <li><button class="dropdown-item rounded-3 py-2 btn-lang-item" data-lang="or">🇮🇳 ଓଡ଼ିଆ (Odia)</button></li>
                     </ul>
                 </div>
                 
