@@ -1028,7 +1028,7 @@
             
             <div class="ms-auto d-flex align-items-center gap-3">
                 <!-- Custom Language Dropdown -->
-                <div class="dropdown" id="langSelector">
+                <div class="dropdown d-none d-md-flex" id="langSelector">
                     <button class="btn btn-glass-bordered px-3 py-2 d-flex align-items-center gap-2" type="button" id="langBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.85rem; height: 38px; padding: 0 14px; border-radius: 10px;">
                         <i class="bi bi-globe2"></i> <span>English</span> <i class="bi bi-chevron-down small"></i>
                     </button>
@@ -1056,8 +1056,8 @@
                     </ul>
                 </div>
                 
-                <a class="btn btn-glass-bordered px-3 d-flex align-items-center fw-bold" href="{{ url_for('web.login_page') }}" style="height: 38px; font-size: 0.88rem; border-radius: 10px;">Login</a>
-                <a class="btn btn-solid-indigo px-4 d-flex align-items-center" href="{{ url_for('web.register_page') }}" style="height: 38px; font-size: 0.88rem; border-radius: 10px; background-color: var(--accent-indigo); border-color: var(--accent-indigo); box-shadow: 0 4px 12px rgba(99,102,241,0.2);">Continue with Web App</a>
+                <a class="btn btn-glass-bordered px-3 d-flex align-items-center fw-bold" href="{{ url_for('web.login_page') }}" style="height: 38px; font-size: 0.88rem; border-radius: 10px; white-space: nowrap;">Login</a>
+                <a class="btn btn-solid-indigo px-3 px-md-4 d-flex align-items-center" href="{{ url_for('web.register_page') }}" style="height: 38px; font-size: 0.88rem; border-radius: 10px; background-color: var(--accent-indigo); border-color: var(--accent-indigo); box-shadow: 0 4px 12px rgba(99,102,241,0.2); white-space: nowrap;"><span class="d-none d-sm-inline">Continue with Web App</span><span class="d-inline d-sm-none">Get Started</span></a>
             </div>
         </div>
     </nav>
